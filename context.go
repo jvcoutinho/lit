@@ -1,3 +1,4 @@
 package lit
 
-type Context struct{}
+type Context struct {
+}

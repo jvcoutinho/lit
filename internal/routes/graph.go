@@ -6,12 +6,14 @@ import (
 	"github.com/jvcoutinho/lit/internal/slices"
 )
 
+// Graph stores route definitions.
 type Graph map[string][]string
 
-func (g Graph) Exists(pattern, method string) bool {
-	patternPaths := strings.Split(pattern, "/")
+// Exists check if route is defined in this graph.
+func (g Graph) Exists(route Route) bool {
+	patternPaths := strings.Split(route.Pattern, "/")
 
-	currentNode := method
+	currentNode := route.Method
 	for _, path := range patternPaths {
 		edges, ok := g[currentNode]
 		if !ok {
@@ -34,10 +36,11 @@ func (g Graph) Exists(pattern, method string) bool {
 	return true
 }
 
-func (g Graph) Add(pattern, method string) {
-	patternPaths := strings.Split(pattern, "/")
+// Add adds the route to this graph.
+func (g Graph) Add(route Route) {
+	patternPaths := strings.Split(route.Pattern, "/")
 
-	currentNode := method
+	currentNode := route.Method
 	for _, path := range patternPaths {
 		_, ok := g[currentNode]
 		if !ok {
