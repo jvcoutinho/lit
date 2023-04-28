@@ -11,14 +11,14 @@ import (
 // It is the entrypoint of a Lit-based application.
 type Router struct {
 	graph    routes.Graph
-	handlers map[routes.Route]func(*Context)
+	handlers map[string]func(*Context)
 }
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
 		make(routes.Graph),
-		make(map[routes.Route]func(*Context)),
+		make(map[string]func(*Context)),
 	}
 }
 
@@ -32,5 +32,5 @@ func (r *Router) Handle(pattern string, method string, handler func(*Context)) {
 	}
 
 	r.graph.Add(route)
-	r.handlers[route] = handler
+	r.handlers[route.String()] = handler
 }

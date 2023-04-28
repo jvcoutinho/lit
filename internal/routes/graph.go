@@ -11,7 +11,7 @@ type Graph map[string][]string
 
 // Exists check if route is defined in this graph.
 func (g Graph) Exists(route Route) bool {
-	patternPaths := strings.Split(route.Pattern, "/")
+	patternPaths := route.Path()
 
 	currentNode := route.Method
 	for _, path := range patternPaths {
@@ -38,7 +38,7 @@ func (g Graph) Exists(route Route) bool {
 
 // Add adds the route to this graph.
 func (g Graph) Add(route Route) {
-	patternPaths := strings.Split(route.Pattern, "/")
+	patternPaths := route.Path()
 
 	currentNode := route.Method
 	for _, path := range patternPaths {
