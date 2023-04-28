@@ -27,6 +27,7 @@ func NewRouter() *Router {
 // If a handler already exists for pattern, Handle panics.
 func (r *Router) Handle(pattern string, method string, handler func(*Context)) {
 	pattern = strings.Trim(pattern, "/")
+	method = strings.ToUpper(method)
 
 	if r.graph.Exists(pattern, method) {
 		panic(fmt.Sprintf("%s /%s has been already defined", method, pattern))

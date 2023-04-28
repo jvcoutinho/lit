@@ -54,6 +54,15 @@ func TestRouter_Handle(t *testing.T) {
 			expectedError: "GET /users has been already defined",
 		},
 		{
+			name: "RouteAlreadyExists_DifferentMethodCase",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			routeToHandle: route{Pattern: "/users", Method: "get", Handler: func(ctx *lit.Context) {}},
+			panics:        true,
+			expectedError: "GET /users has been already defined",
+		},
+		{
 			name: "RouteAlreadyExists_MissingLeadingSlash",
 			currentRoutes: []route{
 				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
