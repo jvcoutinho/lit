@@ -98,6 +98,15 @@ func TestRouter_Handle(t *testing.T) {
 			panics:        true,
 			expectedError: "GET /users/owner has been already defined",
 		},
+		{
+			name: "RouteAlreadyExists_MultiplePaths_DifferentArguments",
+			currentRoutes: []route{
+				{Pattern: "/users/:id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			panics:        true,
+			expectedError: "GET /users/:user_id has been already defined",
+		},
 	}
 
 	for _, test := range tests {

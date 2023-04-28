@@ -18,7 +18,13 @@ func (g Graph) Exists(pattern, method string) bool {
 			return false
 		}
 
-		if !slices.Contains(edges, path) {
+		if !slices.Any(edges, func(edge string) bool {
+			if strings.HasPrefix(edge, ":") && strings.HasPrefix(path, ":") {
+				return true
+			}
+
+			return path == edge
+		}) {
 			return false
 		}
 
