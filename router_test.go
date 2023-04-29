@@ -126,6 +126,13 @@ func TestRouter_Handle(t *testing.T) {
 			panics:        true,
 			expectedError: "GET /users/:id/items has been already defined",
 		},
+		{
+			name:          "InvalidRoute_DuplicateArgument",
+			currentRoutes: nil,
+			routeToHandle: route{Pattern: "/users/:id/items/:id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			panics:        true,
+			expectedError: "a pattern can not contain two arguments with the same name (:id)",
+		},
 	}
 
 	for _, test := range tests {
