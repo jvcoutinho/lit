@@ -3,6 +3,7 @@ package routes
 import (
 	"strings"
 
+	"github.com/jvcoutinho/lit/internal/maps"
 	"github.com/jvcoutinho/lit/internal/slices"
 )
 
@@ -40,14 +41,17 @@ func (g Graph) Exists(route Route) bool {
 func (g Graph) Add(route Route) {
 	patternPaths := route.Path()
 
-	currentNode := route.Method
+	if !maps.ContainsKey(g, route.Method) {
+		g[route.Method] = make([]string, 1)
+	}
+
+	previousNode := route.Method
 	for _, path := range patternPaths {
-		_, ok := g[currentNode]
-		if !ok {
-			g[currentNode] = make([]string, 0)
+		if !maps.ContainsKey(g, path) {
+			g[path] = make([]string, 0)
 		}
 
-		g[currentNode] = append(g[currentNode], path)
-		currentNode = path
+		g[previousNode] = append(g[previousNode], path)
+		previousNode = path
 	}
 }
