@@ -17,7 +17,7 @@ func TestFirst(t *testing.T) {
 		predicate    func(T) bool
 
 		expectedResult T
-		expectedError  error
+		expectedOk     bool
 	}
 
 	tests := []testCase[int]{
@@ -26,14 +26,14 @@ func TestFirst(t *testing.T) {
 			currentSlice:   []int{2, 3},
 			predicate:      func(i int) bool { return i%2 == 0 },
 			expectedResult: 2,
-			expectedError:  nil,
+			expectedOk:     true,
 		},
 		{
 			name:           "NoElementMatchesPredicate",
 			currentSlice:   []int{3, 5},
 			predicate:      func(i int) bool { return i%2 == 0 },
 			expectedResult: 0,
-			expectedError:  slices.ErrNoElementFound,
+			expectedOk:     false,
 		},
 	}
 
@@ -42,10 +42,10 @@ func TestFirst(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			actualResult, actualError := slices.First(test.currentSlice, test.predicate)
+			actualResult, actualOk := slices.First(test.currentSlice, test.predicate)
 
 			require.Equal(t, test.expectedResult, actualResult)
-			require.Equal(t, test.expectedError, actualError)
+			require.Equal(t, test.expectedOk, actualOk)
 		})
 	}
 }
