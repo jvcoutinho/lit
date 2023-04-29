@@ -31,3 +31,7 @@ func (r Route) Path() []string {
 func (r Route) String() string {
 	return fmt.Sprintf("%s /%s", r.Method, r.Pattern)
 }
+
+func isArgument(path string) bool {
+	return strings.HasPrefix(path, ":")
+}

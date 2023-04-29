@@ -6,31 +6,29 @@ import (
 )
 
 // Graph stores route definitions.
-type Graph map[Node][]Node
+type Graph map[string][]string
 
 // Exists check if route is defined in this graph.
 func (g Graph) Exists(route Route) bool {
 	patternPaths := route.Path()
-	methodNode := Node(route.Method)
 
-	if !maps.ContainsKey(g, methodNode) {
+	if !maps.ContainsKey(g, route.Method) {
 		return false
 	}
 
-	previousNode := methodNode
+	previousNode := route.Method
 	for _, path := range patternPaths {
-		pathNode := Node(path)
 		adjacentNodes := g[previousNode]
 
-		if pathNode.IsArgument() && slices.Any(adjacentNodes, Node.IsArgument) {
-			pathNode, _ = slices.First(adjacentNodes, Node.IsArgument)
+		if isArgument(path) && slices.Any(adjacentNodes, isArgument) {
+			path, _ = slices.First(adjacentNodes, isArgument)
 		}
 
-		if !maps.ContainsKey(g, pathNode) || !slices.Contains(adjacentNodes, pathNode) {
+		if !maps.ContainsKey(g, path) || !slices.Contains(adjacentNodes, path) {
 			return false
 		}
 
-		previousNode = pathNode
+		previousNode = path
 	}
 
 	return true
@@ -39,21 +37,19 @@ func (g Graph) Exists(route Route) bool {
 // Add adds the route to this graph.
 func (g Graph) Add(route Route) {
 	patternPaths := route.Path()
-	methodNode := Node(route.Method)
 
-	if !maps.ContainsKey(g, methodNode) {
-		g[methodNode] = make([]Node, 0)
+	if !maps.ContainsKey(g, route.Method) {
+		g[route.Method] = make([]string, 0)
 	}
 
-	previousNode := methodNode
+	previousNode := route.Method
 	for _, path := range patternPaths {
-		pathNode := Node(path)
 
-		if !maps.ContainsKey(g, pathNode) {
-			g[pathNode] = make([]Node, 0)
+		if !maps.ContainsKey(g, path) {
+			g[path] = make([]string, 0)
 		}
 
-		g[previousNode] = append(g[previousNode], pathNode)
-		previousNode = pathNode
+		g[previousNode] = append(g[previousNode], path)
+		previousNode = path
 	}
 }
