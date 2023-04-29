@@ -2,6 +2,7 @@ package lit_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/jvcoutinho/lit"
@@ -150,6 +151,102 @@ func TestRouter_Handle(t *testing.T) {
 					r.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
 				})
 			}
+		})
+	}
+}
+
+func TestRouter_ServeHTTP(t *testing.T) {
+	t.Parallel()
+
+	type route struct {
+		Pattern string
+		Method  string
+		Handler lit.HandleFunc
+	}
+
+	tests := []struct {
+		name string
+
+		currentRoutes   []route
+		incomingMethod  string
+		incomingPattern string
+
+		expectedResponse   string
+		expectedStatusCode int
+	}{
+		{
+			name: "RouteNotDefined_DifferentMethod",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodPost,
+			incomingPattern:    "/users",
+			expectedResponse:   "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name: "RouteNotDefined_DifferentPattern",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/books",
+			expectedResponse:   "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name: "RouteNotDefined_Subpattern",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users/:user_id",
+			expectedResponse:   "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name: "RouteNotDefined_Superpattern",
+			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users",
+			expectedResponse:   "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name: "RouteDefined_EmptyHandler",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			r := lit.NewRouter()
+
+			for _, currentRoute := range test.currentRoutes {
+				r.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
+			}
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(test.incomingMethod, test.incomingPattern, nil)
+
+			// Act
+			r.ServeHTTP(recorder, request)
+
+			// Assert
+			require.Equal(t, test.expectedResponse, recorder.Body.String())
+			require.Equal(t, test.expectedStatusCode, recorder.Code)
 		})
 	}
 }
