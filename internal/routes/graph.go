@@ -1,37 +1,38 @@
 package routes
 
 import (
-	"strings"
-
 	"github.com/jvcoutinho/lit/internal/maps"
 	"github.com/jvcoutinho/lit/internal/slices"
 )
 
 // Graph stores route definitions.
-type Graph map[string][]string
+type Graph map[Node][]Node
 
 // Exists check if route is defined in this graph.
 func (g Graph) Exists(route Route) bool {
 	patternPaths := route.Path()
+	methodNode := Node(route.Method)
 
-	currentNode := route.Method
+	if !maps.ContainsKey(g, methodNode) {
+		return false
+	}
+
+	previousNode := methodNode
 	for _, path := range patternPaths {
-		edges, ok := g[currentNode]
-		if !ok {
-			return false
-		}
+		pathNode := Node(path)
+		adjacentNodes := g[previousNode]
 
-		if !slices.Any(edges, func(edge string) bool {
-			if strings.HasPrefix(edge, ":") && strings.HasPrefix(path, ":") {
-				return true
-			}
-
-			return path == edge
+		if pathNode.IsArgument() && slices.Any(adjacentNodes, func(node Node) bool {
+			return node.IsArgument()
 		}) {
+			continue
+		}
+
+		if !maps.ContainsKey(g, pathNode) || !slices.Contains(adjacentNodes, pathNode) {
 			return false
 		}
 
-		currentNode = path
+		previousNode = pathNode
 	}
 
 	return true
@@ -40,18 +41,21 @@ func (g Graph) Exists(route Route) bool {
 // Add adds the route to this graph.
 func (g Graph) Add(route Route) {
 	patternPaths := route.Path()
+	methodNode := Node(route.Method)
 
-	if !maps.ContainsKey(g, route.Method) {
-		g[route.Method] = make([]string, 1)
+	if !maps.ContainsKey(g, methodNode) {
+		g[methodNode] = make([]Node, 0)
 	}
 
-	previousNode := route.Method
+	previousNode := methodNode
 	for _, path := range patternPaths {
-		if !maps.ContainsKey(g, path) {
-			g[path] = make([]string, 0)
+		pathNode := Node(path)
+
+		if !maps.ContainsKey(g, pathNode) {
+			g[pathNode] = make([]Node, 0)
 		}
 
-		g[previousNode] = append(g[previousNode], path)
-		previousNode = path
+		g[previousNode] = append(g[previousNode], pathNode)
+		previousNode = pathNode
 	}
 }
