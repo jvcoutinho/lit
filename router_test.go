@@ -14,7 +14,7 @@ func TestRouter_Handle(t *testing.T) {
 	type route struct {
 		Pattern string
 		Method  string
-		Handler func(*lit.Context)
+		Handler lit.HandleFunc
 	}
 
 	tests := []struct {
@@ -136,7 +136,7 @@ func TestRouter_Handle(t *testing.T) {
 			r := lit.NewRouter()
 
 			for _, currentRoute := range test.currentRoutes {
-				r.Handle(currentRoute.Pattern, currentRoute.Method, func(*lit.Context) {})
+				r.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
 			}
 
 			// Act

@@ -7,25 +7,28 @@ import (
 	"github.com/jvcoutinho/lit/internal/routes"
 )
 
+// HandleFunc is a function that handles requests.
+type HandleFunc func(ctx *Context)
+
 // Router manages API routes.
 //
 // It is the entrypoint of a Lit-based application.
 type Router struct {
 	graph    routes.Graph
-	handlers map[string]func(*Context)
+	handlers map[string]HandleFunc
 }
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
 		make(routes.Graph),
-		make(map[string]func(*Context)),
+		make(map[string]HandleFunc),
 	}
 }
 
 // Handle registers the handler for the given pattern and method.
 // If a handler already exists for pattern, Handle panics.
-func (r *Router) Handle(pattern string, method string, handler func(*Context)) {
+func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 	route := routes.NewRoute(pattern, method)
 
 	if r.graph.Exists(route) {
@@ -40,7 +43,7 @@ func (r *Router) Handle(pattern string, method string, handler func(*Context)) {
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	route := routes.NewRoute(request.URL.Path, request.Method)
 
-	ctx := NewContext(writer, request)
+	ctx := newContext(writer, request)
 	handler, ok := r.handlers[route.String()]
 	if !ok {
 		http.NotFound(writer, request)
