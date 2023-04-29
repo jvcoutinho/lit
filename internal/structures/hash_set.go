@@ -1,4 +1,4 @@
-package sets
+package structures
 
 // HashSet is a collection for unordered unique elements.
 type HashSet[T comparable] map[T]bool
