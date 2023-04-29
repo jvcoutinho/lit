@@ -22,10 +22,8 @@ func (g Graph) Exists(route Route) bool {
 		pathNode := Node(path)
 		adjacentNodes := g[previousNode]
 
-		if pathNode.IsArgument() && slices.Any(adjacentNodes, func(node Node) bool {
-			return node.IsArgument()
-		}) {
-			continue
+		if pathNode.IsArgument() && slices.Any(adjacentNodes, Node.IsArgument) {
+			pathNode, _ = slices.First(adjacentNodes, Node.IsArgument)
 		}
 
 		if !maps.ContainsKey(g, pathNode) || !slices.Contains(adjacentNodes, pathNode) {
