@@ -17,16 +17,12 @@ type Route struct {
 }
 
 // NewRoute creates a new route instance.
-func NewRoute(pattern, method string) (Route, error) {
+func NewRoute(pattern, method string) Route {
 	pattern = strings.Trim(pattern, "/")
 	path := strings.Split(pattern, "/")
 	method = strings.ToUpper(method)
 
-	if duplicate, has := hasDuplicateArguments(path); has {
-		return Route{}, ErrDuplicateArguments{duplicate}
-	}
-
-	return Route{pattern, method, path}, nil
+	return Route{pattern, method, path}
 }
 
 // Path returns each part of route's pattern.

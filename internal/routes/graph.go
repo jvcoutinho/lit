@@ -8,12 +8,18 @@ import (
 // Graph stores route definitions.
 type Graph map[string][]string
 
-// Exists check if route is defined in this graph.
-func (g Graph) Exists(route Route) bool {
+// CanBeInserted checks if route can be defined in this graph.
+//
+// If it can't be inserted (ok equals false), CanBeInserted returns the reason error.
+func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
 	patternPaths := route.Path()
 
+	if duplicate, has := hasDuplicateArguments(patternPaths); has {
+		return ErrDuplicateArguments{duplicate}, false
+	}
+
 	if !maps.ContainsKey(g, route.Method) {
-		return false
+		return nil, true
 	}
 
 	previousNode := route.Method
@@ -25,13 +31,13 @@ func (g Graph) Exists(route Route) bool {
 		}
 
 		if !maps.ContainsKey(g, path) || !slices.Contains(adjacentNodes, path) {
-			return false
+			return nil, true
 		}
 
 		previousNode = path
 	}
 
-	return true
+	return ErrRouteAlreadyDefined{route}, false
 }
 
 // Add adds the route to this graph.

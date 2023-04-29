@@ -2,6 +2,14 @@ package routes
 
 import "fmt"
 
+type ErrRouteAlreadyDefined struct {
+	Route Route
+}
+
+func (e ErrRouteAlreadyDefined) Error() string {
+	return fmt.Sprintf("%s has been already defined", e.Route)
+}
+
 // ErrDuplicateArguments is the error for duplicate arguments in the same pattern.
 //
 // Example: /users/:id/books/:id

@@ -1,7 +1,6 @@
 package lit
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/jvcoutinho/lit/internal/routes"
@@ -29,13 +28,10 @@ func NewRouter() *Router {
 // Handle registers the handler for the given pattern and method.
 // If a handler already exists for pattern, Handle panics.
 func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
-	route, err := routes.NewRoute(pattern, method)
-	if err != nil {
-		panic(err.Error())
-	}
+	route := routes.NewRoute(pattern, method)
 
-	if r.graph.Exists(route) {
-		panic(fmt.Sprintf("%s has been already defined", route))
+	if err, ok := r.graph.CanBeInserted(route); !ok {
+		panic(err)
 	}
 
 	r.graph.Add(route)
@@ -44,10 +40,7 @@ func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	route, err := routes.NewRoute(request.URL.Path, request.Method)
-	if err != nil {
-
-	}
+	route := routes.NewRoute(request.URL.Path, request.Method)
 
 	ctx := newContext(writer, request)
 	handler, ok := r.handlers[route.String()]

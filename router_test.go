@@ -150,7 +150,7 @@ func TestRouter_Handle(t *testing.T) {
 			// Act
 			// Assert
 			if test.panics {
-				require.PanicsWithValue(t, test.expectedError, func() {
+				require.PanicsWithError(t, test.expectedError, func() {
 					r.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
 				})
 			} else {
@@ -228,6 +228,16 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/users",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_ArgumentSubstitution",
+			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users/123",
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
