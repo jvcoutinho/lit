@@ -50,13 +50,14 @@ func (l *List[T]) ElementAt(index int) (value T, ok bool) {
 	i := 0
 	for currentNode := l.head; currentNode != nil; currentNode = currentNode.next {
 		if i == index {
-			return currentNode.value, true
+			value = currentNode.value
+			break
 		}
 
 		i++
 	}
 
-	return value, false
+	return value, true
 }
 
 // Len is the number of elements this list has.
