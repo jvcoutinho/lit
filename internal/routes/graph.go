@@ -5,6 +5,8 @@ import (
 	"github.com/jvcoutinho/lit/internal/slices"
 )
 
+const terminalNode = "/"
+
 // Graph stores route definitions.
 type Graph map[string][]string
 
@@ -12,9 +14,9 @@ type Graph map[string][]string
 //
 // If it can't be inserted (ok equals false), CanBeInserted returns the reason error.
 func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
-	patternPaths := route.Path()
+	routePath := append(route.Path(), terminalNode)
 
-	if duplicate, has := hasDuplicateArguments(patternPaths); has {
+	if duplicate, has := hasDuplicateArguments(routePath); has {
 		return ErrDuplicateArguments{duplicate}, false
 	}
 
@@ -23,7 +25,7 @@ func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
 	}
 
 	previousNode := route.Method
-	for _, path := range patternPaths {
+	for _, path := range routePath {
 		adjacentNodes := g[previousNode]
 
 		if isArgument(path) && slices.Any(adjacentNodes, isArgument) {
@@ -47,8 +49,9 @@ func (g Graph) Add(route Route) {
 	}
 
 	previousNode := route.Method
-	for _, path := range route.Path() {
+	routePath := append(route.Path(), terminalNode)
 
+	for _, path := range routePath {
 		if !maps.ContainsKey(g, path) {
 			g[path] = make([]string, 0)
 		}
@@ -56,4 +59,52 @@ func (g Graph) Add(route Route) {
 		g[previousNode] = append(g[previousNode], path)
 		previousNode = path
 	}
+}
+
+func (g Graph) Match(route Route) (Match, bool) {
+	if !maps.ContainsKey(g, route.Method) {
+		return Match{}, false
+	}
+
+	match := NewMatch()
+	match.AddMethod(route.Method)
+
+	previousNode := route.Method
+	routePath := route.Path()
+
+	for _, path := range routePath {
+		adjacentNodes := g[previousNode]
+
+		if slices.Contains(adjacentNodes, path) {
+			match.AddPathFragment(path)
+			previousNode = path
+
+			continue
+		}
+
+		arguments := slices.Filter(adjacentNodes, isArgument)
+		if len(arguments) == 0 {
+			return Match{}, false
+		}
+
+		match.AddPathArgument(arguments[0], path)
+		previousNode = arguments[0]
+	}
+
+	if slices.Contains(g[previousNode], terminalNode) {
+		return *match, true
+	}
+
+	return Match{}, false
+}
+
+func (g Graph) matchArgumentNode(parent string, adjacent string, match *Match) bool {
+	adjacentNodes := g[parent]
+
+	if slices.Contains(adjacentNodes, adjacent) {
+		match.AddPathFragment(adjacent)
+
+	}
+
+	return true
 }

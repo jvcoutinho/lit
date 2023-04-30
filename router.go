@@ -42,12 +42,14 @@ func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	route := routes.NewRoute(request.URL.Path, request.Method)
 
-	ctx := newContext(writer, request)
-	handler, ok := r.handlers[route]
+	match, ok := r.graph.Match(route)
 	if !ok {
 		http.NotFound(writer, request)
 		return
 	}
+
+	ctx := newContext(writer, request)
+	handler := r.handlers[match.MatchedRoute()]
 
 	handler(ctx)
 }

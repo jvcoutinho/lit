@@ -46,6 +46,24 @@ func TestRouter_Handle(t *testing.T) {
 			expectedError: "",
 		},
 		{
+			name: "RouteDoesNotExist_Subpattern",
+			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			panics:        false,
+			expectedError: "",
+		},
+		{
+			name: "RouteDoesNotExist_Superpattern",
+			currentRoutes: []route{
+				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			panics:        false,
+			expectedError: "",
+		},
+		{
 			name: "RouteAlreadyExists",
 			currentRoutes: []route{
 				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
@@ -222,7 +240,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
-			name: "RouteDefined_EmptyHandler",
+			name: "RouteDefined",
 			currentRoutes: []route{
 				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
 			},

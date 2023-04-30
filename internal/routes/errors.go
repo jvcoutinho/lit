@@ -2,6 +2,7 @@ package routes
 
 import "fmt"
 
+// ErrRouteAlreadyDefined is the error for already defined routes.
 type ErrRouteAlreadyDefined struct {
 	Route Route
 }
