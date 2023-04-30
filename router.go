@@ -2,9 +2,12 @@ package lit
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/jvcoutinho/lit/internal/routes"
 )
+
+const DefaultReadHeaderTimeout = 3 * time.Second
 
 // HandleFunc is a function that handles requests.
 type HandleFunc func(ctx *Context)
@@ -15,6 +18,8 @@ type HandleFunc func(ctx *Context)
 type Router struct {
 	graph    routes.Graph
 	handlers map[routes.Route]HandleFunc
+
+	server *http.Server
 }
 
 // NewRouter creates a new Router instance.
@@ -22,6 +27,9 @@ func NewRouter() *Router {
 	return &Router{
 		routes.NewGraph(),
 		make(map[routes.Route]HandleFunc),
+		&http.Server{
+			ReadHeaderTimeout: DefaultReadHeaderTimeout,
+		},
 	}
 }
 
@@ -45,6 +53,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	match, ok := r.graph.MatchRoute(route)
 	if !ok {
 		http.NotFound(writer, request)
+
 		return
 	}
 
@@ -56,7 +65,17 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	handler(ctx)
 }
 
+// Server this router uses for listening and serving requests.
+//
+// By default, it has ReadHeaderTimeout = DefaultReadHeaderTimeout, but one can change it at will.
+func (r *Router) Server() *http.Server {
+	return r.server
+}
+
 // ListenAndServe listens on the TCP network address addr and then handle requests on incoming connections.
 func (r *Router) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, r)
+	r.server.Addr = addr
+	r.server.Handler = r
+
+	return r.server.ListenAndServe()
 }

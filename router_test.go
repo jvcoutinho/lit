@@ -159,21 +159,21 @@ func TestRouter_Handle(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			r := lit.NewRouter()
+			router := lit.NewRouter()
 
 			for _, currentRoute := range test.currentRoutes {
-				r.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
+				router.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
 			}
 
 			// Act
 			// Assert
 			if test.panics {
 				require.PanicsWithError(t, test.expectedError, func() {
-					r.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
+					router.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
 				})
 			} else {
 				require.NotPanics(t, func() {
-					r.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
+					router.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
 				})
 			}
 		})
@@ -348,10 +348,10 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			r := lit.NewRouter()
+			router := lit.NewRouter()
 
 			for _, currentRoute := range test.currentRoutes {
-				r.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) {
+				router.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) {
 					require.Equal(t, test.expectedArguments, ctx.URIArguments())
 
 					currentRoute.Handler(ctx)
@@ -362,7 +362,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			request := httptest.NewRequest(test.incomingMethod, test.incomingPattern, nil)
 
 			// Act
-			r.ServeHTTP(recorder, request)
+			router.ServeHTTP(recorder, request)
 
 			// Assert
 			require.Equal(t, test.expectedResponse, recorder.Body.String())

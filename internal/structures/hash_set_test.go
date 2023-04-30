@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/jvcoutinho/lit/internal/structures"
-
 	"github.com/stretchr/testify/require"
 )
 
