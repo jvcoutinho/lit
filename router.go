@@ -56,7 +56,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	handler(ctx)
 }
 
-// Serve listens on the TCP network address addr and then handle requests on incoming connections.
-func (r *Router) Serve(addr string) error {
+// ListenAndServe listens on the TCP network address addr and then handle requests on incoming connections.
+func (r *Router) ListenAndServe(addr string) error {
 	return http.ListenAndServe(addr, r)
 }
