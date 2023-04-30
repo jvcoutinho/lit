@@ -90,7 +90,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 
 	if slices.Contains(children, child) {
 		if g.matchAdjacentNode(child, path, pathIndex+1, match) {
-			match.AddPathFragment(child)
+			match.AddPathFragmentAtBeginning(child)
 			return true
 		}
 
@@ -107,7 +107,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 			continue
 		}
 
-		match.AddPathArgument(childrenArguments[i], child)
+		match.AddPathArgumentAtBeginning(childrenArguments[i], child)
 	}
 
 	return true

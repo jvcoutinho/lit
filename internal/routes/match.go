@@ -1,17 +1,21 @@
 package routes
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/jvcoutinho/lit/internal/structures"
+)
 
 type Match struct {
 	method string
-	path   []string
+	path   *structures.List[string]
 
 	Parameters map[string]string
 }
 
 func NewMatch() *Match {
 	return &Match{
-		path:       make([]string, 0),
+		path:       structures.NewList[string](),
 		Parameters: make(map[string]string),
 	}
 }
@@ -20,20 +24,22 @@ func (m *Match) AddMethod(method string) {
 	m.method = method
 }
 
-func (m *Match) AddPathFragment(fragment string) {
-	m.path = append(m.path, "/"+fragment)
+func (m *Match) AddPathFragmentAtBeginning(fragment string) {
+	m.path.InsertAtBeginning(fragment)
 }
 
-func (m *Match) AddPathArgument(parameter string, argument string) {
-	m.AddPathFragment(parameter)
+func (m *Match) AddPathArgumentAtBeginning(parameter string, argument string) {
+	m.AddPathFragmentAtBeginning(parameter)
 	m.Parameters[parameter] = argument
 }
 
 func (m *Match) MatchedRoute() Route {
 	builder := strings.Builder{}
-	for i := len(m.path) - 1; i >= 0; i-- {
-		builder.WriteString(m.path[i])
-	}
+
+	m.path.Traverse(func(s string) {
+		builder.WriteRune('/')
+		builder.WriteString(s)
+	})
 
 	return NewRoute(builder.String(), m.method)
 }
