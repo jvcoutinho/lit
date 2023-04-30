@@ -42,14 +42,12 @@ func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
 
 // Add adds the route to this graph.
 func (g Graph) Add(route Route) {
-	patternPaths := route.Path()
-
 	if !maps.ContainsKey(g, route.Method) {
 		g[route.Method] = make([]string, 0)
 	}
 
 	previousNode := route.Method
-	for _, path := range patternPaths {
+	for _, path := range route.Path() {
 
 		if !maps.ContainsKey(g, path) {
 			g[path] = make([]string, 0)

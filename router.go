@@ -14,14 +14,14 @@ type HandleFunc func(ctx *Context)
 // It is the entrypoint of a Lit-based application.
 type Router struct {
 	graph    routes.Graph
-	handlers map[string]HandleFunc
+	handlers map[routes.Route]HandleFunc
 }
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
 		make(routes.Graph),
-		make(map[string]HandleFunc),
+		make(map[routes.Route]HandleFunc),
 	}
 }
 
@@ -35,7 +35,7 @@ func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 	}
 
 	r.graph.Add(route)
-	r.handlers[route.String()] = handler
+	r.handlers[route] = handler
 }
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
@@ -43,7 +43,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	route := routes.NewRoute(request.URL.Path, request.Method)
 
 	ctx := newContext(writer, request)
-	handler, ok := r.handlers[route.String()]
+	handler, ok := r.handlers[route]
 	if !ok {
 		http.NotFound(writer, request)
 		return
