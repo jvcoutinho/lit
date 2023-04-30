@@ -42,7 +42,7 @@ func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	route := routes.NewRoute(request.URL.Path, request.Method)
 
-	match, ok := r.graph.Match(route)
+	match, ok := r.graph.MatchRoute(route)
 	if !ok {
 		http.NotFound(writer, request)
 		return

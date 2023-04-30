@@ -64,13 +64,16 @@ func (g Graph) Add(route Route) {
 	}
 }
 
-func (g Graph) Match(route Route) (Match, bool) {
+// MatchRoute finds a correspondence between route and a pre-defined one (in this graph).
+//
+// If a correspondence can not be found, ok equals false.
+func (g Graph) MatchRoute(route Route) (Match, bool) {
 	if !maps.ContainsKey(g, route.Method) {
 		return Match{}, false
 	}
 
-	match := NewMatch()
-	match.AddMethod(route.Method)
+	match := newMatch()
+	match.addMethod(route.Method)
 
 	if !g.matchAdjacentNode(route.Method, route.Path(), 0, match) {
 		return Match{}, false
@@ -90,7 +93,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 
 	if slices.Contains(children, child) {
 		if g.matchAdjacentNode(child, path, pathIndex+1, match) {
-			match.AddPathFragmentAtBeginning(child)
+			match.addPathFragmentAtBeginning(child)
 			return true
 		}
 
@@ -107,7 +110,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 			continue
 		}
 
-		match.AddPathArgumentAtBeginning(childrenArguments[i], child)
+		match.addPathArgumentAtBeginning(childrenArguments[i], child)
 	}
 
 	return true
