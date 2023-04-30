@@ -189,6 +189,9 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		Handler lit.HandleFunc
 	}
 
+	okHandler := func(_ *lit.Context) {}
+	notFoundHandler := func(ctx *lit.Context) { http.NotFound(ctx.ResponseWriter, ctx.Request) }
+
 	tests := []struct {
 		name string
 
@@ -196,125 +199,144 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		incomingMethod  string
 		incomingPattern string
 
+		expectedArguments  map[string]string
 		expectedResponse   string
 		expectedStatusCode int
 	}{
 		{
 			name: "RouteNotDefined_DifferentMethod",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodPost,
 			incomingPattern:    "/users",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name: "RouteNotDefined_DifferentPattern",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/books",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name: "RouteDefined_Root",
 			currentRoutes: []route{
-				{Pattern: "/", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/", Method: http.MethodGet, Handler: okHandler},
+				{Pattern: "/:user_id", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteDefined_ArgumentAtRoot",
 			currentRoutes: []route{
-				{Pattern: "/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/:user_id", Method: http.MethodGet, Handler: okHandler},
 			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/",
+			incomingMethod:  http.MethodGet,
+			incomingPattern: "/",
+			expectedArguments: map[string]string{
+				":user_id": "",
+			},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteNotDefined_Subpattern",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/users/:user_id",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name: "RouteNotDefined_Superpattern",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/users",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name: "RouteDefined",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
 			},
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/users",
+			expectedArguments:  map[string]string{},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteDefined_ArgumentSubstitution",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
 			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users/123",
+			incomingMethod:  http.MethodGet,
+			incomingPattern: "/users/123",
+			expectedArguments: map[string]string{
+				":user_id": "123",
+			},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteDefined_ArgumentSubstitution_SameArguments",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
-					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
-				}},
-				{Pattern: "/users/:user_id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: notFoundHandler},
+				{Pattern: "/users/:user_id/books/:book_id", Method: http.MethodGet, Handler: okHandler},
 			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users/123/books/234",
+			incomingMethod:  http.MethodGet,
+			incomingPattern: "/users/123/books/234",
+			expectedArguments: map[string]string{
+				":user_id": "123",
+				":book_id": "234",
+			},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteDefined_ArgumentSubstitution_Subpattern_DifferentArguments",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
-					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
-				}},
-				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: notFoundHandler},
+				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: okHandler},
 			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users/123/books/234",
+			incomingMethod:  http.MethodGet,
+			incomingPattern: "/users/123/books/234",
+			expectedArguments: map[string]string{
+				":id":      "123",
+				":book_id": "234",
+			},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name: "RouteDefined_ArgumentSubstitution_Superpattern_DifferentArguments",
 			currentRoutes: []route{
-				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
-					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
-				}},
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: notFoundHandler},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
 			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users/123",
+			incomingMethod:  http.MethodGet,
+			incomingPattern: "/users/123",
+			expectedArguments: map[string]string{
+				":user_id": "123",
+			},
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
@@ -329,7 +351,11 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			r := lit.NewRouter()
 
 			for _, currentRoute := range test.currentRoutes {
-				r.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
+				r.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) {
+					require.Equal(t, test.expectedArguments, ctx.URIArguments())
+
+					currentRoute.Handler(ctx)
+				})
 			}
 
 			recorder := httptest.NewRecorder()
