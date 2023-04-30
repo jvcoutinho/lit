@@ -220,6 +220,26 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
+			name: "RouteDefined_Root",
+			currentRoutes: []route{
+				{Pattern: "/", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_ArgumentAtRoot",
+			currentRoutes: []route{
+				{Pattern: "/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
 			name: "RouteNotDefined_Subpattern",
 			currentRoutes: []route{
 				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
@@ -252,6 +272,45 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "RouteDefined_ArgumentSubstitution",
 			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users/123",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_ArgumentSubstitution_SameArguments",
+			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
+					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
+				}},
+				{Pattern: "/users/:user_id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users/123/books/234",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_ArgumentSubstitution_Subpattern_DifferentArguments",
+			currentRoutes: []route{
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
+					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
+				}},
+				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users/123/books/234",
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_ArgumentSubstitution_Superpattern_DifferentArguments",
+			currentRoutes: []route{
+				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {
+					ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
+				}},
 				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
 			},
 			incomingMethod:     http.MethodGet,

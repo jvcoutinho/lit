@@ -56,7 +56,10 @@ func (g Graph) Add(route Route) {
 			g[path] = make([]string, 0)
 		}
 
-		g[previousNode] = append(g[previousNode], path)
+		if !slices.Contains(g[previousNode], path) {
+			g[previousNode] = append(g[previousNode], path)
+		}
+
 		previousNode = path
 	}
 }
@@ -69,41 +72,42 @@ func (g Graph) Match(route Route) (Match, bool) {
 	match := NewMatch()
 	match.AddMethod(route.Method)
 
-	previousNode := route.Method
-	routePath := route.Path()
+	if !g.matchAdjacentNode(route.Method, route.Path(), 0, match) {
+		return Match{}, false
+	}
 
-	for _, path := range routePath {
-		adjacentNodes := g[previousNode]
+	return *match, true
+}
 
-		if slices.Contains(adjacentNodes, path) {
-			match.AddPathFragment(path)
-			previousNode = path
+func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, match *Match) bool {
+	children := g[parent]
 
+	if pathIndex == len(path) {
+		return slices.Contains(children, terminalNode)
+	}
+
+	child := path[pathIndex]
+
+	if slices.Contains(children, child) {
+		if g.matchAdjacentNode(child, path, pathIndex+1, match) {
+			match.AddPathFragment(child)
+			return true
+		}
+
+		return false
+	}
+
+	childrenArguments := slices.Filter(children, isArgument)
+	if len(childrenArguments) == 0 {
+		return false
+	}
+
+	for i := 0; i < len(childrenArguments); i++ {
+		if !g.matchAdjacentNode(childrenArguments[i], path, pathIndex+1, match) {
 			continue
 		}
 
-		arguments := slices.Filter(adjacentNodes, isArgument)
-		if len(arguments) == 0 {
-			return Match{}, false
-		}
-
-		match.AddPathArgument(arguments[0], path)
-		previousNode = arguments[0]
-	}
-
-	if slices.Contains(g[previousNode], terminalNode) {
-		return *match, true
-	}
-
-	return Match{}, false
-}
-
-func (g Graph) matchArgumentNode(parent string, adjacent string, match *Match) bool {
-	adjacentNodes := g[parent]
-
-	if slices.Contains(adjacentNodes, adjacent) {
-		match.AddPathFragment(adjacent)
-
+		match.AddPathArgument(childrenArguments[i], child)
 	}
 
 	return true

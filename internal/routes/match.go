@@ -4,14 +4,14 @@ import "strings"
 
 type Match struct {
 	method string
-	path   *strings.Builder
+	path   []string
 
 	Parameters map[string]string
 }
 
 func NewMatch() *Match {
 	return &Match{
-		path:       &strings.Builder{},
+		path:       make([]string, 0),
 		Parameters: make(map[string]string),
 	}
 }
@@ -21,12 +21,7 @@ func (m *Match) AddMethod(method string) {
 }
 
 func (m *Match) AddPathFragment(fragment string) {
-	m.path.WriteRune('/')
-	m.path.WriteString(fragment)
-}
-
-func (m *Match) Len() int {
-	return m.path.Len()
+	m.path = append(m.path, "/"+fragment)
 }
 
 func (m *Match) AddPathArgument(parameter string, argument string) {
@@ -35,5 +30,10 @@ func (m *Match) AddPathArgument(parameter string, argument string) {
 }
 
 func (m *Match) MatchedRoute() Route {
-	return NewRoute(m.path.String(), m.method)
+	builder := strings.Builder{}
+	for i := len(m.path) - 1; i >= 0; i-- {
+		builder.WriteString(m.path[i])
+	}
+
+	return NewRoute(builder.String(), m.method)
 }
