@@ -39,6 +39,10 @@ func (m *Match) addPathArgumentAtBeginning(parameter string, argument string) {
 
 // MatchedRoute returns the predefined route this match corresponds.
 func (m *Match) MatchedRoute() Route {
+	if m.path == nil {
+		return Route{}
+	}
+
 	builder := strings.Builder{}
 
 	m.path.Traverse(func(s string) {

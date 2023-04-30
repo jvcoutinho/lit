@@ -20,7 +20,7 @@ type Router struct {
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
-		make(routes.Graph),
+		routes.NewGraph(),
 		make(map[routes.Route]HandleFunc),
 	}
 }

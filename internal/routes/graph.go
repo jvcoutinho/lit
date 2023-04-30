@@ -10,6 +10,11 @@ const terminalNode = "/"
 // Graph stores route definitions.
 type Graph map[string][]string
 
+// NewGraph creates a new Graph instance.
+func NewGraph() Graph {
+	return make(map[string][]string)
+}
+
 // CanBeInserted checks if route can be defined in this graph.
 //
 // If it can't be inserted (ok equals false), CanBeInserted returns the reason error.
@@ -92,12 +97,12 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 	child := path[pathIndex]
 
 	if slices.Contains(children, child) {
-		if g.matchAdjacentNode(child, path, pathIndex+1, match) {
-			match.addPathFragmentAtBeginning(child)
-			return true
+		if !g.matchAdjacentNode(child, path, pathIndex+1, match) {
+			return false
 		}
 
-		return false
+		match.addPathFragmentAtBeginning(child)
+		return true
 	}
 
 	childrenArguments := slices.Filter(children, isArgument)
@@ -111,7 +116,8 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 		}
 
 		match.addPathArgumentAtBeginning(childrenArguments[i], child)
+		return true
 	}
 
-	return true
+	return false
 }
