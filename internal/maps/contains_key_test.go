@@ -40,5 +40,4 @@ func TestContainsKey(t *testing.T) {
 			require.Equal(t, test.expectedResult, maps.ContainsKey(test.currentValues, test.keyToCheck))
 		})
 	}
-
 }

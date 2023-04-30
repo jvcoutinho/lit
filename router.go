@@ -48,8 +48,10 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	ctx := newContext(writer, request)
 	handler := r.handlers[match.MatchedRoute()]
+
+	ctx := newContext(writer, request)
+	ctx.setArguments(match.Parameters)
 
 	handler(ctx)
 }
