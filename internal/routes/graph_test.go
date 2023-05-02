@@ -53,7 +53,7 @@ func TestGraph_CanBeInserted(t *testing.T) {
 				routes.NewRoute("/users/:id", http.MethodGet),
 			},
 			routeToCheck: routes.NewRoute("/users/:user_id", http.MethodGet),
-			expectedError: routes.ErrRouteAlreadyDefined{
+			expectedError: routes.RouteAlreadyDefinedError{
 				Route: routes.NewRoute("/users/:user_id", http.MethodGet),
 			},
 			expectedOk: false,
@@ -62,7 +62,7 @@ func TestGraph_CanBeInserted(t *testing.T) {
 			name:          "UndefinedRoute_DuplicateParameters",
 			currentRoutes: []routes.Route{},
 			routeToCheck:  routes.NewRoute("/users/:id/books/:id", http.MethodGet),
-			expectedError: routes.ErrDuplicateArguments{Duplicate: ":id"},
+			expectedError: routes.DuplicateArgumentsError{Duplicate: ":id"},
 			expectedOk:    false,
 		},
 		{
@@ -71,7 +71,7 @@ func TestGraph_CanBeInserted(t *testing.T) {
 				routes.NewRoute("/users/:id", http.MethodGet),
 			},
 			routeToCheck: routes.NewRoute("/users/:user_id", http.MethodGet),
-			expectedError: routes.ErrRouteAlreadyDefined{
+			expectedError: routes.RouteAlreadyDefinedError{
 				Route: routes.NewRoute("/users/:user_id", http.MethodGet),
 			},
 			expectedOk: false,
@@ -90,11 +90,11 @@ func TestGraph_CanBeInserted(t *testing.T) {
 			}
 
 			// Act
-			actualError, actualOk := graph.CanBeInserted(test.routeToCheck)
+			actualOk, actualError := graph.CanBeInserted(test.routeToCheck)
 
 			// Assert
-			require.ErrorIs(t, test.expectedError, actualError)
 			require.Equal(t, test.expectedOk, actualOk)
+			require.ErrorIs(t, test.expectedError, actualError)
 		})
 	}
 }

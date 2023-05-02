@@ -26,5 +26,6 @@ func (s HashSet[T]) Len() int {
 // Contains returns true if and only if elem is contained in this set.
 func (s HashSet[T]) Contains(elem T) bool {
 	_, ok := s[elem]
+
 	return ok
 }

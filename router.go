@@ -38,7 +38,7 @@ func NewRouter() *Router {
 func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 	route := routes.NewRoute(pattern, method)
 
-	if err, ok := r.graph.CanBeInserted(route); !ok {
+	if ok, err := r.graph.CanBeInserted(route); !ok {
 		panic(err)
 	}
 

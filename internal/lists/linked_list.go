@@ -47,14 +47,14 @@ func (l *LinkedList[T]) ElementAt(index int) (value T, ok bool) {
 		return value, false
 	}
 
-	i := 0
-	for currentNode := l.head; currentNode != nil; currentNode = currentNode.next {
-		if i == index {
+	for currentNodeIndex, currentNode := 0, l.head; currentNode != nil; currentNode = currentNode.next {
+		if currentNodeIndex == index {
 			value = currentNode.value
+
 			break
 		}
 
-		i++
+		currentNodeIndex++
 	}
 
 	return value, true

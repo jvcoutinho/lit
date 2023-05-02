@@ -18,15 +18,15 @@ func NewGraph() Graph {
 // CanBeInserted checks if route can be defined in this graph.
 //
 // If it can't be inserted (ok equals false), CanBeInserted returns the reason error.
-func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
+func (g Graph) CanBeInserted(route Route) (ok bool, reason error) {
 	routePath := append(route.Path(), terminalNode)
 
 	if duplicate, has := hasDuplicateArguments(routePath); has {
-		return ErrDuplicateArguments{duplicate}, false
+		return false, DuplicateArgumentsError{duplicate}
 	}
 
 	if !maps.ContainsKey(g, route.Method) {
-		return nil, true
+		return true, nil
 	}
 
 	previousNode := route.Method
@@ -38,13 +38,13 @@ func (g Graph) CanBeInserted(route Route) (reason error, ok bool) {
 		}
 
 		if !maps.ContainsKey(g, path) || !slices.Contains(adjacentNodes, path) {
-			return nil, true
+			return true, nil
 		}
 
 		previousNode = path
 	}
 
-	return ErrRouteAlreadyDefined{route}, false
+	return false, RouteAlreadyDefinedError{route}
 }
 
 // Add adds the route to this graph.
@@ -102,6 +102,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 		}
 
 		match.addPathFragmentAtBeginning(child)
+
 		return true
 	}
 
@@ -116,6 +117,7 @@ func (g Graph) matchAdjacentNode(parent string, path []string, pathIndex int, ma
 		}
 
 		match.addPathArgumentAtBeginning(childrenArguments[i], child)
+
 		return true
 	}
 
