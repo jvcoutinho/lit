@@ -1,13 +1,13 @@
-package structures_test
+package lists_test
 
 import (
 	"testing"
 
-	"github.com/jvcoutinho/lit/internal/structures"
+	"github.com/jvcoutinho/lit/internal/lists"
 	"github.com/stretchr/testify/require"
 )
 
-func TestList_InsertAtBeginning(t *testing.T) {
+func TestLinkedList_InsertAtBeginning(t *testing.T) {
 	t.Parallel()
 
 	type testCase[T comparable] struct {
@@ -40,7 +40,7 @@ func TestList_InsertAtBeginning(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			list := structures.NewList[int](test.initialElements...)
+			list := lists.NewLinkedList[int](test.initialElements...)
 
 			// Act
 			list.InsertAtBeginning(test.elementToAdd)
@@ -54,7 +54,7 @@ func TestList_InsertAtBeginning(t *testing.T) {
 	}
 }
 
-func TestList_ElementAt(t *testing.T) {
+func TestLinkedList_ElementAt(t *testing.T) {
 	t.Parallel()
 
 	type testCase[T comparable] struct {
@@ -104,7 +104,7 @@ func TestList_ElementAt(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			list := structures.NewList[int](test.elements...)
+			list := lists.NewLinkedList[int](test.elements...)
 
 			// Act
 			actualResult, actualOk := list.ElementAt(test.index)
@@ -116,7 +116,7 @@ func TestList_ElementAt(t *testing.T) {
 	}
 }
 
-func TestList_Traverse(t *testing.T) {
+func TestLinkedList_Traverse(t *testing.T) {
 	t.Parallel()
 
 	type testCase[T comparable] struct {
@@ -146,7 +146,7 @@ func TestList_Traverse(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			list := structures.NewList[int](test.elements...)
+			list := lists.NewLinkedList[int](test.elements...)
 			sum := 0
 
 			// Act

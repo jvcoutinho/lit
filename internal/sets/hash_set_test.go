@@ -1,9 +1,9 @@
-package structures_test
+package sets_test
 
 import (
 	"testing"
 
-	"github.com/jvcoutinho/lit/internal/structures"
+	"github.com/jvcoutinho/lit/internal/sets"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,7 +40,7 @@ func TestHashSet_Add(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			set := structures.NewHashSet[int](test.initialElements...)
+			set := sets.NewHashSet[int](test.initialElements...)
 
 			// Act
 			set.Add(test.elementToAdd)

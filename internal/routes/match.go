@@ -3,7 +3,7 @@ package routes
 import (
 	"strings"
 
-	"github.com/jvcoutinho/lit/internal/structures"
+	"github.com/jvcoutinho/lit/internal/lists"
 )
 
 // Match is a correspondence between an incoming pattern and method to a pre-defined Route.
@@ -11,7 +11,7 @@ import (
 // As the route may have parameters, they are collected throughout the progress of a match.
 type Match struct {
 	method string
-	path   *structures.List[string]
+	path   *lists.LinkedList[string]
 
 	// The matched arguments from the pattern.
 	Parameters map[string]string
@@ -19,7 +19,7 @@ type Match struct {
 
 func newMatch() *Match {
 	return &Match{
-		path:       structures.NewList[string](),
+		path:       lists.NewLinkedList[string](),
 		Parameters: make(map[string]string),
 	}
 }
