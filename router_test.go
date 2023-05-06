@@ -193,7 +193,11 @@ func TestRouter_ServeHTTP(t *testing.T) {
 	}
 
 	okHandler := func(_ *lit.Context) lit.Result { return nil }
-	notFoundHandler := func(ctx *lit.Context) lit.Result { http.NotFound(ctx.ResponseWriter, ctx.Request); return nil }
+	notFoundHandler := func(ctx *lit.Context) lit.Result {
+		http.NotFound(ctx.ResponseWriter, ctx.Request)
+
+		return nil
+	}
 
 	tests := []struct {
 		name string

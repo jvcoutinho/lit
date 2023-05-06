@@ -62,7 +62,11 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	ctx := newContext(writer, request)
 	ctx.setArguments(match.Parameters)
 
-	handler(ctx)
+	result := handler(ctx)
+
+	if result != nil {
+		result.Write(ctx)
+	}
 }
 
 // Server this router uses for listening and serving requests.
