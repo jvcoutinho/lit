@@ -19,6 +19,8 @@ func TestRouter_Handle(t *testing.T) {
 		Handler lit.HandleFunc
 	}
 
+	emptyHandler := func(ctx *lit.Context) lit.Result { return nil }
+
 	tests := []struct {
 		name string
 
@@ -31,124 +33,124 @@ func TestRouter_Handle(t *testing.T) {
 		{
 			name: "RouteDoesNotExist_SameMethod",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        false,
 			expectedError: "",
 		},
 		{
 			name: "RouteDoesNotExist_SamePattern",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodPost, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users", Method: http.MethodPost, Handler: emptyHandler},
 			panics:        false,
 			expectedError: "",
 		},
 		{
 			name: "RouteDoesNotExist_Subpattern",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        false,
 			expectedError: "",
 		},
 		{
 			name: "RouteDoesNotExist_Superpattern",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        false,
 			expectedError: "",
 		},
 		{
 			name: "RouteAlreadyExists",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_DifferentMethodCase",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users", Method: "get", Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users", Method: "get", Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MissingLeadingSlash",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "users", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_PresentTrailingSlash",
 			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "users/", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "users/", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MultiplePaths",
 			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users/owner has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MultiplePaths_MissingLeadingSlash",
 			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users/owner has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MultiplePaths_PresentTrailingSlash",
 			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "users/owner/", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "users/owner/", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users/owner has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MultiplePaths_DifferentArguments",
 			currentRoutes: []route{
-				{Pattern: "/users/:id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:id", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users/:user_id has been already defined",
 		},
 		{
 			name: "RouteAlreadyExists_MultiplePaths_DifferentArguments_ArgumentInMiddle",
 			currentRoutes: []route{
-				{Pattern: "/users/:user_id/items", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+				{Pattern: "/users/:user_id/items", Method: http.MethodGet, Handler: emptyHandler},
 			},
-			routeToHandle: route{Pattern: "/users/:id/items", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/:id/items", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "GET /users/:id/items has been already defined",
 		},
 		{
 			name:          "InvalidRoute_DuplicateArgument",
 			currentRoutes: nil,
-			routeToHandle: route{Pattern: "/users/:id/items/:id", Method: http.MethodGet, Handler: func(ctx *lit.Context) {}},
+			routeToHandle: route{Pattern: "/users/:id/items/:id", Method: http.MethodGet, Handler: emptyHandler},
 			panics:        true,
 			expectedError: "a pattern can not contain two arguments with the same name (:id)",
 		},
@@ -190,8 +192,12 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		Handler lit.HandleFunc
 	}
 
-	okHandler := func(_ *lit.Context) {}
-	notFoundHandler := func(ctx *lit.Context) { http.NotFound(ctx.ResponseWriter, ctx.Request) }
+	okHandler := func(_ *lit.Context) lit.Result { return nil }
+	notFoundHandler := func(ctx *lit.Context) lit.Result {
+		http.NotFound(ctx.ResponseWriter, ctx.Request)
+
+		return nil
+	}
 
 	tests := []struct {
 		name string
@@ -352,10 +358,12 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			router := lit.NewRouter()
 
 			for _, currentRoute := range test.currentRoutes {
-				router.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) {
+				router.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) lit.Result {
 					require.Equal(t, test.expectedArguments, ctx.URIArguments())
 
 					currentRoute.Handler(ctx)
+
+					return nil
 				})
 			}
 

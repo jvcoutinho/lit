@@ -10,7 +10,7 @@ import (
 const DefaultReadHeaderTimeout = 3 * time.Second
 
 // HandleFunc is a function that handles requests.
-type HandleFunc func(ctx *Context)
+type HandleFunc func(ctx *Context) Result
 
 // Router manages API routes.
 //
@@ -62,7 +62,11 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	ctx := newContext(writer, request)
 	ctx.setArguments(match.Parameters)
 
-	handler(ctx)
+	result := handler(ctx)
+
+	if result != nil {
+		result.Write(ctx)
+	}
 }
 
 // Server this router uses for listening and serving requests.
