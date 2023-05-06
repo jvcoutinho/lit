@@ -10,7 +10,7 @@ import (
 const DefaultReadHeaderTimeout = 3 * time.Second
 
 // HandleFunc is a function that handles requests.
-type HandleFunc func(ctx *Context)
+type HandleFunc func(ctx *Context) Result
 
 // Router manages API routes.
 //
