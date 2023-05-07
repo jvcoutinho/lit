@@ -26,7 +26,7 @@ func NewJSONResult(statusCode int, obj any) *JSONResult {
 func (r *JSONResult) Render(ctx *lit.Context) error {
 	objectBytes, err := json.Marshal(r.Body)
 	if err != nil {
-		return fmt.Errorf("JSONResult.Render: %w", err)
+		return fmt.Errorf("rendering JSON: %w", err)
 	}
 
 	ctx.SetStatusCode(r.StatusCode)
