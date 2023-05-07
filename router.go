@@ -59,7 +59,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	handle := r.handlers[match.MatchedRoute()]
 
-	ctx := newContext(writer, request)
+	ctx := NewContext(writer, request)
 	ctx.setArguments(match.Parameters)
 
 	result := handle(ctx)

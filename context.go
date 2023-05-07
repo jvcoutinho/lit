@@ -15,7 +15,8 @@ type Context struct {
 	arguments map[string]string
 }
 
-func newContext(writer http.ResponseWriter, request *http.Request) *Context {
+// NewContext creates a new Context instance.
+func NewContext(writer http.ResponseWriter, request *http.Request) *Context {
 	return &Context{
 		ResponseWriter: writer,
 		Request:        request,
