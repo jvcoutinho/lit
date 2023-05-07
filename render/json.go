@@ -2,6 +2,7 @@ package render
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/jvcoutinho/lit"
@@ -22,15 +23,17 @@ func NewJSONResult(statusCode int, obj any) *JSONResult {
 	return &JSONResult{statusCode, obj}
 }
 
-func (r *JSONResult) Render(ctx *lit.Context) {
+func (r *JSONResult) Render(ctx *lit.Context) error {
 	objectBytes, err := json.Marshal(r.Body)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("JSONResult.Render: %w", err)
 	}
 
 	ctx.SetStatusCode(r.StatusCode)
 	ctx.SetHeader("Content-Type", "application/json")
 	ctx.WriteBody(objectBytes)
+
+	return nil
 }
 
 // Ok responds the request with Status Code 200 (OK) and an optional body marshalled as JSON.

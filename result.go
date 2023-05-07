@@ -5,5 +5,5 @@ package lit
 // See the lit/render package.
 type Result interface {
 	// Render writes this into the HTTP response managed by ctx.
-	Render(ctx *Context)
+	Render(ctx *Context) error
 }

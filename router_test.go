@@ -5,10 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jvcoutinho/lit/render"
-
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/littest"
+	"github.com/jvcoutinho/lit/render"
 	"github.com/stretchr/testify/require"
 )
 
@@ -365,6 +364,23 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedArguments:  map[string]string{},
 			expectedResponse:   "[]",
 			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "RouteDefined_RenderResponse_ResponseIsNotRenderable",
+			currentRoutes: []route{
+				{
+					Pattern: "/users",
+					Method:  http.MethodGet,
+					Handler: func(ctx *lit.Context) lit.Result {
+						return render.Ok(complex(1.0, 1.0))
+					},
+				},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users",
+			expectedArguments:  map[string]string{},
+			expectedResponse:   "JSONResult.Render: json: unsupported type: complex128\n",
+			expectedStatusCode: http.StatusInternalServerError,
 		},
 	}
 

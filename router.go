@@ -64,8 +64,12 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	result := handle(ctx)
 
-	if result != nil {
-		result.Render(ctx)
+	if result == nil {
+		return
+	}
+
+	if err := result.Render(ctx); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
 }
 
