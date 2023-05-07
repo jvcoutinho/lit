@@ -2,8 +2,8 @@ package lit
 
 // Result of an HTTP request.
 //
-// Use the result package in order to produce Result implementations.
+// See the lit/render package.
 type Result interface {
-	// Write writes the result into the HTTP response managed by ctx.
-	Write(ctx *Context)
+	// Render writes this into the HTTP response managed by ctx.
+	Render(ctx *Context)
 }

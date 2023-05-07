@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jvcoutinho/lit/render"
+
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/littest"
 	"github.com/stretchr/testify/require"
@@ -347,6 +349,23 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
+		{
+			name: "RouteDefined_RenderResponse",
+			currentRoutes: []route{
+				{
+					Pattern: "/users",
+					Method:  http.MethodGet,
+					Handler: func(ctx *lit.Context) lit.Result {
+						return render.Ok([]string{})
+					},
+				},
+			},
+			incomingMethod:     http.MethodGet,
+			incomingPattern:    "/users",
+			expectedArguments:  map[string]string{},
+			expectedResponse:   "[]",
+			expectedStatusCode: http.StatusOK,
+		},
 	}
 
 	for _, test := range tests {
@@ -361,9 +380,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				router.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) lit.Result {
 					require.Equal(t, test.expectedArguments, ctx.URIArguments())
 
-					currentRoute.Handler(ctx)
-
-					return nil
+					return currentRoute.Handler(ctx)
 				})
 			}
 

@@ -1,6 +1,7 @@
 package lit
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/jvcoutinho/lit/internal/maps"
@@ -35,4 +36,24 @@ func (c *Context) setArguments(arguments map[string]string) {
 // regular usage.
 func (c *Context) URIArguments() map[string]string {
 	return maps.Copy(c.arguments)
+}
+
+// SetStatusCode sets the response' status code to statusCode.
+func (c *Context) SetStatusCode(statusCode int) {
+	c.ResponseWriter.WriteHeader(statusCode)
+}
+
+// WriteBody writes bytes to the response.
+func (c *Context) WriteBody(bytes []byte) {
+	_, err := c.ResponseWriter.Write(bytes)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// SetHeader sets the header entries associated with key to the single element value.
+// It replaces any existing values associated with key.
+func (c *Context) SetHeader(key, value string) {
+	header := c.ResponseWriter.Header()
+	header.Set(key, value)
 }
