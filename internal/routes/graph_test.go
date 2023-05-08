@@ -103,65 +103,72 @@ func TestGraph_MatchRoute(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
-		description   string
-		initialRoutes []routes.Route
-		route         routes.Route
-		expectedRoute routes.Route
-		expectedOk    bool
+		description       string
+		initialRoutes     []routes.Route
+		route             routes.Route
+		expectedRoute     routes.Route
+		expectedOk        bool
+		expectedArguments map[string]string
 	}
 
 	tests := []TestCase{
 		{
-			description:   "GivenGraphIsEmpty_ShouldReturnFalse",
-			initialRoutes: []routes.Route{},
-			route:         routes.NewRoute("/users", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			description:       "GivenGraphIsEmpty_ShouldReturnFalse",
+			initialRoutes:     []routes.Route{},
+			route:             routes.NewRoute("/users", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRoutePatternDoesNotExistInGraph_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/books", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRouteMethodDoesNotExistInGraph_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users", http.MethodPost),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users", http.MethodPost),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRoutePatternDoesNotExistInGraph_ButASuperpatternDoes_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users/:user_id", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRoutePatternDoesNotExistInGraph_ButASubpatternDoes_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users/:user_id", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users/:user_id", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRoutePatternExistsInGraph_AndRouteMethodAlsoDoes_ShouldReturnMatch",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users", http.MethodGet),
-			expectedRoute: routes.NewRoute("/users", http.MethodGet),
-			expectedOk:    true,
+			route:             routes.NewRoute("/users", http.MethodGet),
+			expectedRoute:     routes.NewRoute("/users", http.MethodGet),
+			expectedOk:        true,
+			expectedArguments: map[string]string{},
 		},
 		{
 			description: "GivenRoutePatternExistsInGraphWithParameter_AndParameterIsInTheEndOfPattern_ShouldReturnMatch",
@@ -171,6 +178,9 @@ func TestGraph_MatchRoute(t *testing.T) {
 			route:         routes.NewRoute("/users/123", http.MethodGet),
 			expectedRoute: routes.NewRoute("/users/:user_id", http.MethodGet),
 			expectedOk:    true,
+			expectedArguments: map[string]string{
+				":user_id": "123",
+			},
 		},
 		{
 			description: "GivenRoutePatternExistsInGraphWithParameter_AndParameterIsInTheMiddleOfPattern_ShouldReturnMatch",
@@ -180,6 +190,9 @@ func TestGraph_MatchRoute(t *testing.T) {
 			route:         routes.NewRoute("/users/123/books", http.MethodGet),
 			expectedRoute: routes.NewRoute("/users/:user_id/books", http.MethodGet),
 			expectedOk:    true,
+			expectedArguments: map[string]string{
+				":user_id": "123",
+			},
 		},
 		{
 			description: "GivenRoutePatternExistsInGraphWithParameter_AndParameterIsInTheBeginningOfPattern_ShouldReturnMatch",
@@ -189,24 +202,29 @@ func TestGraph_MatchRoute(t *testing.T) {
 			route:         routes.NewRoute("/123/books", http.MethodGet),
 			expectedRoute: routes.NewRoute("/:user_id/books", http.MethodGet),
 			expectedOk:    true,
+			expectedArguments: map[string]string{
+				":user_id": "123",
+			},
 		},
 		{
 			description: "GivenRoutePatternDoesNotExistInGraph_ButSuperpatternWithParameterDoes_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users/:user_id/books", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users/123", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users/123", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 		{
 			description: "GivenRoutePatternDoesNotExistInGraph_ButSubpatternWithParameterDoes_ShouldReturnFalse",
 			initialRoutes: []routes.Route{
 				routes.NewRoute("/users/:user_id", http.MethodGet),
 			},
-			route:         routes.NewRoute("/users/123/books", http.MethodGet),
-			expectedRoute: routes.Route{},
-			expectedOk:    false,
+			route:             routes.NewRoute("/users/123/books", http.MethodGet),
+			expectedRoute:     routes.Route{},
+			expectedOk:        false,
+			expectedArguments: nil,
 		},
 	}
 
@@ -224,6 +242,7 @@ func TestGraph_MatchRoute(t *testing.T) {
 			// Assert
 			require.Equal(t, test.expectedRoute, match.MatchedRoute())
 			require.Equal(t, test.expectedOk, actualOk)
+			require.Equal(t, test.expectedArguments, match.Parameters)
 		})
 	}
 }
