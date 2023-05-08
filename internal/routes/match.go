@@ -45,10 +45,7 @@ func (m *Match) MatchedRoute() Route {
 	builder := strings.Builder{}
 
 	for iterator := m.path.Front(); iterator != nil; iterator = iterator.Next() {
-		path, ok := iterator.Value.(string)
-		if !ok {
-			continue
-		}
+		path, _ := iterator.Value.(string)
 
 		builder.WriteRune('/')
 		builder.WriteString(path)

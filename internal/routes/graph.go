@@ -11,8 +11,14 @@ const terminalNode = "/"
 type Graph map[string][]string
 
 // NewGraph creates a new Graph instance.
-func NewGraph() Graph {
-	return make(map[string][]string)
+func NewGraph(initialRoutes ...Route) Graph {
+	graph := Graph(make(map[string][]string))
+
+	for _, route := range initialRoutes {
+		graph.Add(route)
+	}
+
+	return graph
 }
 
 // CanBeInserted checks if route can be defined in this graph.
