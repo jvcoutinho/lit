@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/littest"
 	"github.com/jvcoutinho/lit/render"
 	"github.com/stretchr/testify/require"
 )
@@ -400,8 +399,11 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				})
 			}
 
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(test.incomingMethod, test.incomingPattern, nil)
+
 			// Act
-			recorder := littest.Request(t, router, httptest.NewRequest(test.incomingMethod, test.incomingPattern, nil))
+			router.ServeHTTP(recorder, request)
 
 			// Assert
 			require.Equal(t, test.expectedResponse, recorder.Body.String())
