@@ -1,7 +1,6 @@
 package lit
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/jvcoutinho/lit/internal/maps"
@@ -46,10 +45,7 @@ func (c *Context) SetStatusCode(statusCode int) {
 
 // WriteBody writes bytes to the response.
 func (c *Context) WriteBody(bytes []byte) {
-	_, err := c.ResponseWriter.Write(bytes)
-	if err != nil {
-		log.Println(err)
-	}
+	_, _ = c.ResponseWriter.Write(bytes)
 }
 
 // SetHeader sets the header entries associated with key to the single element value.
