@@ -379,7 +379,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			incomingMethod:     http.MethodGet,
 			incomingPattern:    "/users",
 			expectedArguments:  map[string]string{},
-			expectedResponse:   "JSONResult.Render: json: unsupported type: complex128\n",
+			expectedResponse:   "rendering JSON: json: unsupported type: complex128\n",
 			expectedStatusCode: http.StatusInternalServerError,
 		},
 	}

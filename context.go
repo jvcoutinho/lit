@@ -3,7 +3,7 @@ package lit
 import (
 	"net/http"
 
-	"github.com/jvcoutinho/lit/internal/maps"
+	"github.com/jvcoutinho/lambda/maps"
 )
 
 // Context is an implementation of context.Context that manages the input and output of incoming requests.

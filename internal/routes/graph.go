@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/jvcoutinho/lit/internal/maps"
-	"github.com/jvcoutinho/lit/internal/slices"
+	"github.com/jvcoutinho/lambda/maps"
+	"github.com/jvcoutinho/lambda/slices"
 )
 
 const terminalNode = "/"
@@ -34,7 +34,7 @@ func (g Graph) CanBeInserted(route Route) (ok bool, reason error) {
 		adjacentNodes := g[previousNode]
 
 		if isArgument(path) && slices.Any(adjacentNodes, isArgument) {
-			path, _ = slices.First(adjacentNodes, isArgument)
+			path, _ = slices.FirstBy(adjacentNodes, isArgument)
 		}
 
 		if !maps.ContainsKey(g, path) || !slices.Contains(adjacentNodes, path) {

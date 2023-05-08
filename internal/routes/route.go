@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jvcoutinho/lit/internal/sets"
-	"github.com/jvcoutinho/lit/internal/slices"
+	"github.com/jvcoutinho/lambda/set"
+	"github.com/jvcoutinho/lambda/slices"
 )
 
 // Route is a representation of an HTTP endpoint.
@@ -34,7 +34,7 @@ func (r Route) String() string {
 
 func hasDuplicateArguments(path []string) (string, bool) {
 	arguments := slices.Filter(path, isArgument)
-	set := sets.NewHashSet[string]()
+	set := set.New[string]()
 
 	for _, argument := range arguments {
 		if set.Contains(argument) {

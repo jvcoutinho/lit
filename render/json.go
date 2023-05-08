@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/internal/slices"
 )
 
 // JSONResult sets Content-Type header to application/json, marshals a given object to JSON
@@ -40,5 +39,5 @@ func (r *JSONResult) Render(ctx *lit.Context) error {
 //
 // All elements of obj but the first are ignored in order to mimic an optional parameter.
 func Ok(obj ...any) *JSONResult {
-	return NewJSONResult(http.StatusOK, slices.ElementAtOrDefault(obj, 0))
+	return NewJSONResult(http.StatusOK, obj[0])
 }
