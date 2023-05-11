@@ -42,8 +42,8 @@ func NewRouter() *Router {
 
 // Handle registers the handler for the given pattern and method.
 // If a handler already exists for pattern, Handle panics.
-func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
-	if handler == nil {
+func (r *Router) Handle(pattern string, method string, handle HandleFunc) {
+	if handle == nil {
 		panic("handle must not be nil")
 	}
 
@@ -52,7 +52,7 @@ func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
 		panic(err)
 	}
 
-	r.handlers[node] = handler
+	r.handlers[node] = handle
 }
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
