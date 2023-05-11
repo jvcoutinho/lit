@@ -44,7 +44,7 @@ func NewRouter() *Router {
 // If a handler already exists for pattern, Handle panics.
 func (r *Router) Handle(pattern string, method string, handle HandleFunc) {
 	if handle == nil {
-		panic("handle must not be nil")
+		panic("handle should not be nil")
 	}
 
 	node, err := r.trie.Insert(pattern, method)

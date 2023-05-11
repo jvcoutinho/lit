@@ -2,412 +2,324 @@ package lit_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/render"
+	"github.com/jvcoutinho/lit/internal/routes"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRouter_Handle(t *testing.T) {
 	t.Parallel()
 
-	type route struct {
+	defaultHandle := func(ctx *lit.Context) lit.Result { return nil }
+
+	type Route struct {
 		Pattern string
 		Method  string
-		Handler lit.HandleFunc
+		Handle  lit.HandleFunc
 	}
 
-	emptyHandler := func(ctx *lit.Context) lit.Result { return nil }
+	type TestCase struct {
+		description string
 
-	tests := []struct {
-		name string
+		existingRoutes []Route
 
-		currentRoutes []route
-		routeToHandle route
+		pattern string
+		method  string
+		handle  lit.HandleFunc
 
-		panics        bool
-		expectedError string
-	}{
+		panics     bool
+		panicValue any
+	}
+
+	tests := []TestCase{
 		{
-			name: "RouteDoesNotExist_SameMethod",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
-			},
-			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        false,
-			expectedError: "",
+			description:    "GivenHandleIsNil_ShouldPanic",
+			existingRoutes: nil,
+			pattern:        "/books",
+			method:         http.MethodGet,
+			handle:         nil,
+			panics:         true,
+			panicValue:     "handle should not be nil",
 		},
 		{
-			name: "RouteDoesNotExist_SamePattern",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
-			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodPost, Handler: emptyHandler},
-			panics:        false,
-			expectedError: "",
+			description:    "GivenPatternContainsDoubleSlashes_ShouldPanic",
+			existingRoutes: nil,
+			pattern:        "/books//",
+			method:         http.MethodGet,
+			handle:         defaultHandle,
+			panics:         true,
+			panicValue:     routes.ErrPatternContainsDoubleSlash,
 		},
 		{
-			name: "RouteDoesNotExist_Subpattern",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
-			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        false,
-			expectedError: "",
+			description:    "GivenMethodIsEmpty_ShouldPanic",
+			existingRoutes: nil,
+			pattern:        "/books",
+			method:         "",
+			handle:         defaultHandle,
+			panics:         true,
+			panicValue:     routes.ErrMethodIsEmpty,
 		},
 		{
-			name: "RouteDoesNotExist_Superpattern",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
-			},
-			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        false,
-			expectedError: "",
+			description:    "GivenRouterIsHandlingNoRoutes_ShouldNotPanic",
+			existingRoutes: []Route{},
+			pattern:        "/books",
+			method:         http.MethodGet,
+			handle:         defaultHandle,
+			panics:         false,
+			panicValue:     nil,
 		},
 		{
-			name: "RouteAlreadyExists",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasTrailingSlash_AndSameRouteWithoutTrailingExists_ShouldPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users has been already defined",
+			pattern:    "/books/",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     true,
+			panicValue: routes.ErrPatternHasBeenDefinedAlready,
 		},
 		{
-			name: "RouteAlreadyExists_DifferentMethodCase",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasOnlyStaticSegments_AndItExists_ShouldPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "/users", Method: "get", Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users has been already defined",
+			pattern:    "/books",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     true,
+			panicValue: routes.ErrPatternHasBeenDefinedAlready,
 		},
 		{
-			name: "RouteAlreadyExists_MissingLeadingSlash",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasOnlyStaticSegments_AndItDoesNotExists_PatternDiffers_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "users", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users has been already defined",
+			pattern:    "/users",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 		{
-			name: "RouteAlreadyExists_PresentTrailingSlash",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasOnlyStaticSegments_AndItDoesNotExists_MethodDiffers_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "users/", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users has been already defined",
+			pattern:    "/books",
+			method:     http.MethodPost,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 		{
-			name: "RouteAlreadyExists_MultiplePaths",
-			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasOnlyStaticSegments_AndItDoesNotExists_IsSubpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/book",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users/owner has been already defined",
+			pattern:    "/books",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 		{
-			name: "RouteAlreadyExists_MultiplePaths_MissingLeadingSlash",
-			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasOnlyStaticSegments_AndItDoesNotExists_IsSuperpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "users/owner", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users/owner has been already defined",
+			pattern:    "/books/book",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 		{
-			name: "RouteAlreadyExists_MultiplePaths_PresentTrailingSlash",
-			currentRoutes: []route{
-				{Pattern: "/users/owner", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasDynamicSegments_AndItExists_ParametersAreEqual_ShouldPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "users/owner/", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users/owner has been already defined",
+			pattern:    "/books/:id",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     true,
+			panicValue: routes.ErrPatternHasBeenDefinedAlready,
 		},
 		{
-			name: "RouteAlreadyExists_MultiplePaths_DifferentArguments",
-			currentRoutes: []route{
-				{Pattern: "/users/:id", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasDynamicSegments_AndItExists_ParametersAreDifferent_ShouldPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users/:user_id has been already defined",
+			pattern:    "/books/:user_id",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     true,
+			panicValue: routes.ErrPatternHasConflictingParameters,
 		},
 		{
-			name: "RouteAlreadyExists_MultiplePaths_DifferentArguments_ArgumentInMiddle",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id/items", Method: http.MethodGet, Handler: emptyHandler},
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreDifferent_MethodDiffers_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
 			},
-			routeToHandle: route{Pattern: "/users/:id/items", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "GET /users/:id/items has been already defined",
+			pattern:    "/books/:user_id",
+			method:     http.MethodPost,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 		{
-			name:          "InvalidRoute_DuplicateArgument",
-			currentRoutes: nil,
-			routeToHandle: route{Pattern: "/users/:id/items/:id", Method: http.MethodGet, Handler: emptyHandler},
-			panics:        true,
-			expectedError: "a pattern can not contain two arguments with the same name (:id)",
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreEqual_MethodDiffers_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/books/:id",
+			method:     http.MethodPost,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
+		},
+		{
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreDifferent_IsSubpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id/readers",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/books/:user_id",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
+		},
+		{
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreEqual_IsSubpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id/readers",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/books/:id",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
+		},
+		{
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreDifferent_IsSuperpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/books/:user_id/readers",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
+		},
+		{
+			description: "GivenRouteHasDynamicSegments_AndItDoesNotExist_ParametersAreEqual_IsSuperpattern_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/books/:id/readers",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
+		},
+		{
+			description: "GivenRouteHasOnlyDynamicSegments_AndItDoesNotExist_StaticSegmentsExist_ShouldNotPanic",
+			existingRoutes: []Route{
+				{
+					Pattern: "/books/:id",
+					Method:  http.MethodGet,
+					Handle:  defaultHandle,
+				},
+			},
+			pattern:    "/:user_id/:book_id",
+			method:     http.MethodGet,
+			handle:     defaultHandle,
+			panics:     false,
+			panicValue: nil,
 		},
 	}
 
 	for _, test := range tests {
 		test := test
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.description, func(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
 			router := lit.NewRouter()
 
-			for _, currentRoute := range test.currentRoutes {
-				router.Handle(currentRoute.Pattern, currentRoute.Method, currentRoute.Handler)
+			for _, route := range test.existingRoutes {
+				router.Handle(route.Pattern, route.Method, route.Handle)
 			}
 
 			// Act
 			// Assert
 			if test.panics {
-				require.PanicsWithError(t, test.expectedError, func() {
-					router.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
+				require.PanicsWithValue(t, test.panicValue, func() {
+					router.Handle(test.pattern, test.method, test.handle)
 				})
 			} else {
 				require.NotPanics(t, func() {
-					router.Handle(test.routeToHandle.Pattern, test.routeToHandle.Method, test.routeToHandle.Handler)
+					router.Handle(test.pattern, test.method, test.handle)
 				})
 			}
-		})
-	}
-}
-
-func TestRouter_ServeHTTP(t *testing.T) {
-	t.Parallel()
-
-	type route struct {
-		Pattern string
-		Method  string
-		Handler lit.HandleFunc
-	}
-
-	okHandler := func(_ *lit.Context) lit.Result { return nil }
-	notFoundHandler := func(ctx *lit.Context) lit.Result {
-		http.NotFound(ctx.ResponseWriter, ctx.Request)
-
-		return nil
-	}
-
-	tests := []struct {
-		name string
-
-		currentRoutes   []route
-		incomingMethod  string
-		incomingPattern string
-
-		expectedArguments  map[string]string
-		expectedResponse   string
-		expectedStatusCode int
-	}{
-		{
-			name: "RouteNotDefined_DifferentMethod",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodPost,
-			incomingPattern:    "/users",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "404 page not found\n",
-			expectedStatusCode: http.StatusNotFound,
-		},
-		{
-			name: "RouteNotDefined_DifferentPattern",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/books",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "404 page not found\n",
-			expectedStatusCode: http.StatusNotFound,
-		},
-		{
-			name: "RouteDefined_Root",
-			currentRoutes: []route{
-				{Pattern: "/", Method: http.MethodGet, Handler: okHandler},
-				{Pattern: "/:user_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_ArgumentAtRoot",
-			currentRoutes: []route{
-				{Pattern: "/:user_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:  http.MethodGet,
-			incomingPattern: "/",
-			expectedArguments: map[string]string{
-				":user_id": "",
-			},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteNotDefined_Subpattern",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users/:user_id",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "404 page not found\n",
-			expectedStatusCode: http.StatusNotFound,
-		},
-		{
-			name: "RouteNotDefined_Superpattern",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "404 page not found\n",
-			expectedStatusCode: http.StatusNotFound,
-		},
-		{
-			name: "RouteDefined",
-			currentRoutes: []route{
-				{Pattern: "/users", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_ArgumentSubstitution",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:  http.MethodGet,
-			incomingPattern: "/users/123",
-			expectedArguments: map[string]string{
-				":user_id": "123",
-			},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_ArgumentSubstitution_SameArguments",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: notFoundHandler},
-				{Pattern: "/users/:user_id/books/:book_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:  http.MethodGet,
-			incomingPattern: "/users/123/books/234",
-			expectedArguments: map[string]string{
-				":user_id": "123",
-				":book_id": "234",
-			},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_ArgumentSubstitution_Subpattern_DifferentArguments",
-			currentRoutes: []route{
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: notFoundHandler},
-				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:  http.MethodGet,
-			incomingPattern: "/users/123/books/234",
-			expectedArguments: map[string]string{
-				":id":      "123",
-				":book_id": "234",
-			},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_ArgumentSubstitution_Superpattern_DifferentArguments",
-			currentRoutes: []route{
-				{Pattern: "/users/:id/books/:book_id", Method: http.MethodGet, Handler: notFoundHandler},
-				{Pattern: "/users/:user_id", Method: http.MethodGet, Handler: okHandler},
-			},
-			incomingMethod:  http.MethodGet,
-			incomingPattern: "/users/123",
-			expectedArguments: map[string]string{
-				":user_id": "123",
-			},
-			expectedResponse:   "",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_RenderResponse",
-			currentRoutes: []route{
-				{
-					Pattern: "/users",
-					Method:  http.MethodGet,
-					Handler: func(ctx *lit.Context) lit.Result {
-						return render.Ok([]string{})
-					},
-				},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "[]",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			name: "RouteDefined_RenderResponse_ResponseIsNotRenderable",
-			currentRoutes: []route{
-				{
-					Pattern: "/users",
-					Method:  http.MethodGet,
-					Handler: func(ctx *lit.Context) lit.Result {
-						return render.Ok(complex(1.0, 1.0))
-					},
-				},
-			},
-			incomingMethod:     http.MethodGet,
-			incomingPattern:    "/users",
-			expectedArguments:  map[string]string{},
-			expectedResponse:   "rendering JSON: json: unsupported type: complex128\n",
-			expectedStatusCode: http.StatusInternalServerError,
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			// Arrange
-			router := lit.NewRouter()
-
-			for _, currentRoute := range test.currentRoutes {
-				router.Handle(currentRoute.Pattern, currentRoute.Method, func(ctx *lit.Context) lit.Result {
-					require.Equal(t, test.expectedArguments, ctx.URIArguments())
-
-					return currentRoute.Handler(ctx)
-				})
-			}
-
-			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest(test.incomingMethod, test.incomingPattern, nil)
-
-			// Act
-			router.ServeHTTP(recorder, request)
-
-			// Assert
-			require.Equal(t, test.expectedResponse, recorder.Body.String())
-			require.Equal(t, test.expectedStatusCode, recorder.Code)
 		})
 	}
 }

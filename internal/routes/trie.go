@@ -4,14 +4,15 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jvcoutinho/lambda/maps"
 	"github.com/jvcoutinho/lambda/slices"
 )
 
 var (
-	ErrMethodIsEmpty                   = errors.New("method must not be empty")
-	ErrPatternContainsDoubleSlash      = errors.New("pattern must not contain double slashes (//)")
-	ErrPatternHasBeenDefinedAlready    = errors.New("pattern already exists for method")
-	ErrPatternHasConflictingParameters = errors.New("parameters of pattern are conflicting with already defined ones")
+	ErrMethodIsEmpty                   = errors.New("method should not be empty")
+	ErrPatternContainsDoubleSlash      = errors.New("pattern should not contain double slashes (//)")
+	ErrPatternHasBeenDefinedAlready    = errors.New("route already exists")
+	ErrPatternHasConflictingParameters = errors.New("parameters are conflicting with defined ones in another route")
 )
 
 // Trie stores pattern segments as nodes so they can be matched with incoming requests later.
@@ -43,19 +44,7 @@ func (t *Trie) Match(pattern, method string) (*Node, map[string]string) {
 		return nil, nil
 	}
 
-	var (
-		parameters       = t.parameters[terminalNode]
-		matchedArguments = make(map[string]string)
-	)
-
-	for i := 0; i < len(parameters); i++ {
-		parameter := parameters[i]
-		argument := arguments[i]
-
-		matchedArguments[parameter] = argument
-	}
-
-	return terminalNode, matchedArguments
+	return terminalNode, maps.FromSlices(t.parameters[terminalNode], arguments)
 }
 
 func (t *Trie) findTerminal(parent *Node, segments []string, arguments *[]string) *Node {
