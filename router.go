@@ -57,7 +57,7 @@ func (r *Router) Handle(pattern string, method string, handle HandleFunc) {
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	node, parameters := r.trie.Match(request.URL.Path, request.Method)
+	node, arguments := r.trie.Match(request.URL.Path, request.Method)
 	if node == nil {
 		http.NotFound(writer, request)
 
@@ -65,17 +65,17 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	context := NewContext(writer, request)
-	context.setArguments(parameters)
+	context.setArguments(arguments)
 
 	handle := r.handlers[node]
-
 	result := handle(context)
-	result.Render(context)
+
+	if err := result.Render(context); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // Server this router uses for listening and serving requests.
-//
-// By default, it has ReadHeaderTimeout = DefaultReadHeaderTimeout, but one can change it at will.
 func (r *Router) Server() *http.Server {
 	return r.server
 }
