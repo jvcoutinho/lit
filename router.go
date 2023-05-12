@@ -70,6 +70,10 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	handle := r.handlers[node]
 	result := handle(context)
 
+	if result == nil {
+		return
+	}
+
 	if err := result.Render(context); err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
