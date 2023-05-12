@@ -3,7 +3,7 @@ package lit
 import (
 	"net/http"
 
-	"github.com/jvcoutinho/lit/internal/maps"
+	"github.com/jvcoutinho/lambda/maps"
 )
 
 // Context is an implementation of context.Context that manages the input and output of incoming requests.
@@ -14,7 +14,8 @@ type Context struct {
 	arguments map[string]string
 }
 
-func newContext(writer http.ResponseWriter, request *http.Request) *Context {
+// NewContext creates a new Context instance.
+func NewContext(writer http.ResponseWriter, request *http.Request) *Context {
 	return &Context{
 		ResponseWriter: writer,
 		Request:        request,
@@ -35,4 +36,21 @@ func (c *Context) setArguments(arguments map[string]string) {
 // regular usage.
 func (c *Context) URIArguments() map[string]string {
 	return maps.Copy(c.arguments)
+}
+
+// SetStatusCode sets the response' status code to statusCode.
+func (c *Context) SetStatusCode(statusCode int) {
+	c.ResponseWriter.WriteHeader(statusCode)
+}
+
+// WriteBody writes bytes to the response.
+func (c *Context) WriteBody(bytes []byte) {
+	_, _ = c.ResponseWriter.Write(bytes)
+}
+
+// SetHeader sets the header entries associated with key to the single element value.
+// It replaces any existing values associated with key.
+func (c *Context) SetHeader(key, value string) {
+	header := c.ResponseWriter.Header()
+	header.Set(key, value)
 }

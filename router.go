@@ -9,6 +9,14 @@ import (
 
 const DefaultReadHeaderTimeout = 3 * time.Second
 
+// Result of an HTTP request.
+//
+// See the lit/render package.
+type Result interface {
+	// Render writes this into the HTTP response managed by ctx.
+	Render(ctx *Context) error
+}
+
 // HandleFunc is a function that handles requests.
 type HandleFunc func(ctx *Context) Result
 
@@ -16,18 +24,17 @@ type HandleFunc func(ctx *Context) Result
 //
 // It is the entrypoint of a Lit-based application.
 type Router struct {
-	graph    routes.Graph
-	handlers map[routes.Route]HandleFunc
-
-	server *http.Server
+	trie     *routes.Trie
+	handlers map[*routes.Node]HandleFunc
+	server   *http.Server
 }
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
-		routes.NewGraph(),
-		make(map[routes.Route]HandleFunc),
-		&http.Server{
+		trie:     routes.NewTrie(),
+		handlers: make(map[*routes.Node]HandleFunc),
+		server: &http.Server{
 			ReadHeaderTimeout: DefaultReadHeaderTimeout,
 		},
 	}
@@ -35,43 +42,40 @@ func NewRouter() *Router {
 
 // Handle registers the handler for the given pattern and method.
 // If a handler already exists for pattern, Handle panics.
-func (r *Router) Handle(pattern string, method string, handler HandleFunc) {
-	route := routes.NewRoute(pattern, method)
+func (r *Router) Handle(pattern string, method string, handle HandleFunc) {
+	if handle == nil {
+		panic("handle should not be nil")
+	}
 
-	if ok, err := r.graph.CanBeInserted(route); !ok {
+	node, err := r.trie.Insert(pattern, method)
+	if err != nil {
 		panic(err)
 	}
 
-	r.graph.Add(route)
-	r.handlers[route] = handler
+	r.handlers[node] = handle
 }
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	route := routes.NewRoute(request.URL.Path, request.Method)
-
-	match, ok := r.graph.MatchRoute(route)
-	if !ok {
+	node, arguments := r.trie.Match(request.URL.Path, request.Method)
+	if node == nil {
 		http.NotFound(writer, request)
 
 		return
 	}
 
-	handler := r.handlers[match.MatchedRoute()]
+	context := NewContext(writer, request)
+	context.setArguments(arguments)
 
-	ctx := newContext(writer, request)
-	ctx.setArguments(match.Parameters)
+	handle := r.handlers[node]
+	result := handle(context)
 
-	result := handler(ctx)
-
-	if result != nil {
-		result.Write(ctx)
+	if err := result.Render(context); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 // Server this router uses for listening and serving requests.
-//
-// By default, it has ReadHeaderTimeout = DefaultReadHeaderTimeout, but one can change it at will.
 func (r *Router) Server() *http.Server {
 	return r.server
 }
