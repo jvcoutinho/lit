@@ -98,10 +98,10 @@ func (r *Router) WithServer(server *http.Server) {
 	r.server = server
 }
 
-// WithNotFoundHandler sets the handler that runs when an incoming request matches no defined routes.
+// SetNotFoundHandler sets the handler that runs when an incoming request matches no registered routes.
 //
-// The default handler just runs http.NotFound. If handler is nil, WithNotFoundHandler panics.
-func (r *Router) WithNotFoundHandler(handler HandlerFunc) {
+// The default handler just runs http.NotFound. If handler is nil, SetNotFoundHandler panics.
+func (r *Router) SetNotFoundHandler(handler HandlerFunc) {
 	if handler == nil {
 		panic(ErrNilHandler)
 	}

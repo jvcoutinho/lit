@@ -324,7 +324,7 @@ func TestRouter_Handle(t *testing.T) {
 	}
 }
 
-func TestRouter_WithNotFoundHandler(t *testing.T) {
+func TestRouter_SetNotFoundHandler(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
@@ -361,11 +361,11 @@ func TestRouter_WithNotFoundHandler(t *testing.T) {
 			// Assert
 			if test.panics {
 				require.PanicsWithValue(t, test.panicValue, func() {
-					router.WithNotFoundHandler(test.notFoundHandler)
+					router.SetNotFoundHandler(test.notFoundHandler)
 				})
 			} else {
 				require.NotPanics(t, func() {
-					router.WithNotFoundHandler(test.notFoundHandler)
+					router.SetNotFoundHandler(test.notFoundHandler)
 				})
 			}
 		})
