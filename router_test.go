@@ -323,3 +323,51 @@ func TestRouter_Handle(t *testing.T) {
 		})
 	}
 }
+
+func TestRouter_WithNotFoundHandler(t *testing.T) {
+	t.Parallel()
+
+	type TestCase struct {
+		description     string
+		notFoundHandler lit.HandlerFunc
+		panics          bool
+		panicValue      any
+	}
+
+	tests := []TestCase{
+		{
+			description:     "GivenHandlerIsNil_ShouldPanic",
+			notFoundHandler: nil,
+			panics:          true,
+			panicValue:      lit.ErrNilHandler,
+		},
+		{
+			description:     "GivenHandlerIsNotNil_ShouldNotPanic",
+			notFoundHandler: func(ctx *lit.Context) lit.Result { return nil },
+			panics:          false,
+			panicValue:      nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.description, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			router := lit.NewRouter()
+
+			// Act
+			// Assert
+			if test.panics {
+				require.PanicsWithValue(t, test.panicValue, func() {
+					router.WithNotFoundHandler(test.notFoundHandler)
+				})
+			} else {
+				require.NotPanics(t, func() {
+					router.WithNotFoundHandler(test.notFoundHandler)
+				})
+			}
+		})
+	}
+}
