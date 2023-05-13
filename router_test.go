@@ -17,7 +17,7 @@ func TestRouter_Handle(t *testing.T) {
 	type Route struct {
 		Pattern string
 		Method  string
-		Handle  lit.HandleFunc
+		Handle  lit.HandlerFunc
 	}
 
 	type TestCase struct {
@@ -27,7 +27,7 @@ func TestRouter_Handle(t *testing.T) {
 
 		pattern string
 		method  string
-		handle  lit.HandleFunc
+		handle  lit.HandlerFunc
 
 		panics     bool
 		panicValue any
@@ -41,7 +41,7 @@ func TestRouter_Handle(t *testing.T) {
 			method:         http.MethodGet,
 			handle:         nil,
 			panics:         true,
-			panicValue:     "handle should not be nil",
+			panicValue:     lit.ErrNilHandler,
 		},
 		{
 			description:    "GivenPatternContainsDoubleSlashes_ShouldPanic",
