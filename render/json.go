@@ -17,27 +17,24 @@ type JSONResult struct {
 	Body any
 }
 
-// NewJSONResult creates a new JSONResult instance.
-func NewJSONResult(statusCode int, obj any) *JSONResult {
-	return &JSONResult{statusCode, obj}
-}
+// JSON sets Content-Type header to application/json, marshals obj to a JSON representation
+// and sets the product as the response body.
+func JSON(statusCode int, obj ...any) lit.Response {
+	return func(writer http.ResponseWriter) {
+		objectBytes, err := json.Marshal(obj[0])
+		if err != nil {
+			panic(fmt.Errorf("rendering JSON: %w", err))
+		}
 
-func (r *JSONResult) Render(ctx *lit.Context) error {
-	objectBytes, err := json.Marshal(r.Body)
-	if err != nil {
-		return fmt.Errorf("rendering JSON: %w", err)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(statusCode)
+		_, _ = writer.Write(objectBytes)
 	}
-
-	ctx.SetStatusCode(r.StatusCode)
-	ctx.SetHeader("Content-Type", "application/json")
-	ctx.WriteBody(objectBytes)
-
-	return nil
 }
 
-// Ok responds the request with Status Code 200 (OK) and an optional body marshalled as JSON.
-//
-// All elements of obj but the first are ignored in order to mimic an optional parameter.
-func Ok(obj ...any) *JSONResult {
-	return NewJSONResult(http.StatusOK, obj[0])
-}
+// // Ok responds the request with Status Code 200 (OK) and an optional body marshalled as JSON.
+// //
+// // All elements of obj but the first are ignored in order to mimic an optional parameter.
+// func Ok(obj ...any) *JSONResult {
+// 	return NewJSONResult(http.StatusOK, obj[0])
+// }

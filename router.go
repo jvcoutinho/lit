@@ -13,16 +13,8 @@ var ErrNilHandler = errors.New("handler should not be nil")
 
 const defaultReadHeaderTimeout = 3 * time.Second
 
-// Result of an HTTP request.
-//
-// See the lit/render package.
-type Result interface {
-	// Render writes this into the HTTP response managed by ctx.
-	Render(ctx *Context) error
-}
-
 // HandlerFunc is a function that handles requests.
-type HandlerFunc func(ctx *Context) Result
+type HandlerFunc func(req *Request) Response
 
 // Router manages API routes.
 //
@@ -37,10 +29,10 @@ type Router struct {
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
-	defaultNotFoundHandler := func(ctx *Context) Result {
-		http.NotFound(ctx.ResponseWriter, ctx.Request)
-
-		return nil
+	defaultNotFoundHandler := func(req *Request) Response {
+		return func(writer http.ResponseWriter) {
+			http.NotFound(writer, req.httpRequest)
+		}
 	}
 
 	defaultServer := &http.Server{ReadHeaderTimeout: defaultReadHeaderTimeout}
@@ -69,28 +61,26 @@ func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 }
 
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
-func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request) {
 	var (
-		context = NewContext(writer, request)
+		request = NewRequest(httpRequest)
 		handler HandlerFunc
 	)
 
-	node, arguments := r.trie.Match(request.URL.Path, request.Method)
+	node, arguments := r.trie.Match(httpRequest.URL.Path, httpRequest.Method)
 	if node == nil {
 		handler = r.notFoundHandler
 	} else {
-		context.setArguments(arguments)
+		request.setURIArguments(arguments)
 		handler = r.handlers[node]
 	}
 
-	result := handler(context)
-	if result == nil {
+	response := handler(request)
+	if response == nil {
 		return
 	}
 
-	if err := result.Render(context); err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-	}
+	response(writer)
 }
 
 // WithServer sets the server this router uses for listening and serving requests.

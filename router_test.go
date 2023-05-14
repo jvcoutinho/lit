@@ -13,7 +13,7 @@ import (
 func TestRouter_Handle(t *testing.T) {
 	t.Parallel()
 
-	defaultHandle := func(ctx *lit.Context) lit.Result { return nil }
+	defaultHandle := func(req *lit.Request) lit.Response { return nil }
 
 	type Route struct {
 		Pattern string
@@ -328,6 +328,8 @@ func TestRouter_Handle(t *testing.T) {
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
 
+	defaultHandle := func(req *lit.Request) lit.Response { return nil }
+
 	type Route struct {
 		Pattern string
 		Method  string
@@ -368,7 +370,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/users",
@@ -388,7 +390,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/books",
@@ -408,7 +410,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/users",
@@ -425,7 +427,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users/:id",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/users/Bob",
@@ -442,7 +444,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users/:user_id/books/:book_id",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/users/Bob/books/123",
@@ -459,17 +461,15 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle: func(ctx *lit.Context) lit.Result {
-						return nil
-					},
+					Handle:  defaultHandle,
 				},
 				{
 					Pattern: "/users/:id",
 					Method:  http.MethodGet,
-					Handle: func(ctx *lit.Context) lit.Result {
-						ctx.SetStatusCode(http.StatusOK)
-
-						return nil
+					Handle: func(req *lit.Request) lit.Response {
+						return func(w http.ResponseWriter) {
+							w.WriteHeader(http.StatusBadRequest)
+						}
 					},
 				},
 			},
@@ -487,12 +487,12 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle: func(ctx *lit.Context) lit.Result {
-						ctx.SetStatusCode(http.StatusBadRequest)
-						ctx.WriteBody([]byte("body"))
-						ctx.SetHeader("Content-Type", "application/json")
-
-						return nil
+					Handle: func(req *lit.Request) lit.Response {
+						return func(w http.ResponseWriter) {
+							w.WriteHeader(http.StatusBadRequest)
+							_, _ = w.Write([]byte("body"))
+							w.Header().Set("Content-Type", "application/json")
+						}
 					},
 				},
 			},
@@ -508,18 +508,18 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		{
 			description: "GivenRouteDoesNotExist_AndNotFoundHandlerIsSet_ShouldRunHandler",
 			setUpRouter: func(r *lit.Router) {
-				r.HandleNotFound(func(ctx *lit.Context) lit.Result {
-					ctx.SetStatusCode(http.StatusNotFound)
-					ctx.WriteBody([]byte("not found"))
-
-					return nil
+				r.HandleNotFound(func(req *lit.Request) lit.Response {
+					return func(w http.ResponseWriter) {
+						w.WriteHeader(http.StatusNotFound)
+						w.Write([]byte("not found"))
+					}
 				})
 			},
 			existingRoutes: []Route{
 				{
 					Pattern: "/users",
 					Method:  http.MethodGet,
-					Handle:  func(ctx *lit.Context) lit.Result { return nil },
+					Handle:  defaultHandle,
 				},
 			},
 			path:                 "/books",
@@ -536,11 +536,11 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			t.Parallel()
 
-			testArgumentsHandler := func(route Route) func(ctx *lit.Context) lit.Result {
-				return func(ctx *lit.Context) lit.Result {
-					require.Equal(t, test.expectedArguments, ctx.URIArguments())
+			testArgumentsHandler := func(route Route) lit.HandlerFunc {
+				return func(req *lit.Request) lit.Response {
+					require.Equal(t, test.expectedArguments, req.URIArguments())
 
-					return route.Handle(ctx)
+					return route.Handle(req)
 				}
 			}
 
@@ -569,6 +569,8 @@ func TestRouter_ServeHTTP(t *testing.T) {
 func TestRouter_HandleNotFound(t *testing.T) {
 	t.Parallel()
 
+	defaultHandle := func(req *lit.Request) lit.Response { return nil }
+
 	type TestCase struct {
 		description     string
 		notFoundHandler lit.HandlerFunc
@@ -585,7 +587,7 @@ func TestRouter_HandleNotFound(t *testing.T) {
 		},
 		{
 			description:     "GivenHandlerIsNotNil_ShouldNotPanic",
-			notFoundHandler: func(ctx *lit.Context) lit.Result { return nil },
+			notFoundHandler: defaultHandle,
 			panics:          false,
 			panicValue:      nil,
 		},
