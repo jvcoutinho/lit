@@ -83,7 +83,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request
 	}
 
 	if err := response.Write(writer); err != nil {
-		panic(err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
 }
 

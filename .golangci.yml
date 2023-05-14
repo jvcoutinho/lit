@@ -35,6 +35,7 @@ issues:
       linters:
         - funlen
         - maintidx
+        - goerr113
 
     - source: 'ok bool'
       linters:

@@ -1,6 +1,8 @@
 package lit_test
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -483,7 +485,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedHeader:       http.Header{},
 		},
 		{
-			description: "GivenRouteWritesToContext_ShouldReflectInResponse",
+			description: "GivenRouteExists_AndItReturnsANonNilResponse_ShouldWriteResponse",
 			setUpRouter: func(r *lit.Router) {},
 			existingRoutes: []Route{
 				{
@@ -535,6 +537,30 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedStatusCode:   http.StatusNotFound,
 			expectedHeader:       http.Header{},
 		},
+		{
+			description: "GivenRouteExists_AndItReturnsAnErroringResponse_ShouldWrite500InternalServerErrorResponse",
+			setUpRouter: func(r *lit.Router) {},
+			existingRoutes: []Route{
+				{
+					Pattern: "/users",
+					Method:  http.MethodGet,
+					Handle: func(req *lit.Request) lit.Response {
+						return lit.CustomResponse(func(writer http.ResponseWriter) error {
+							return errors.New("error")
+						})
+					},
+				},
+			},
+			path:                 "/users",
+			method:               http.MethodGet,
+			expectedArguments:    map[string]string{},
+			expectedResponseBody: "error\n",
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedHeader: http.Header{
+				"Content-Type":           {"text/plain; charset=utf-8"},
+				"X-Content-Type-Options": {"nosniff"},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -542,8 +568,11 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			t.Parallel()
 
-			testArgumentsHandler := func(route Route) lit.HandlerFunc {
+			testRequestHandler := func(route Route) lit.HandlerFunc {
 				return func(req *lit.Request) lit.Response {
+					require.Equal(t, context.Background(), req.Context())
+					require.Equal(t, test.method, req.Method)
+					require.Equal(t, test.path, req.URI.Path)
 					require.Equal(t, test.expectedArguments, req.URIArguments())
 
 					return route.Handle(req)
@@ -555,7 +584,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			test.setUpRouter(router)
 
 			for _, route := range test.existingRoutes {
-				router.Handle(route.Pattern, route.Method, testArgumentsHandler(route))
+				router.Handle(route.Pattern, route.Method, testRequestHandler(route))
 			}
 
 			recorder := httptest.NewRecorder()
