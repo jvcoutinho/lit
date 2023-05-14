@@ -508,7 +508,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		{
 			description: "GivenRouteDoesNotExist_AndNotFoundHandlerIsSet_ShouldRunHandler",
 			setUpRouter: func(r *lit.Router) {
-				r.SetNotFoundHandler(func(ctx *lit.Context) lit.Result {
+				r.HandleNotFound(func(ctx *lit.Context) lit.Result {
 					ctx.SetStatusCode(http.StatusNotFound)
 					ctx.WriteBody([]byte("not found"))
 
@@ -566,7 +566,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 	}
 }
 
-func TestRouter_SetNotFoundHandler(t *testing.T) {
+func TestRouter_HandleNotFound(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
@@ -603,11 +603,11 @@ func TestRouter_SetNotFoundHandler(t *testing.T) {
 			// Assert
 			if test.panics {
 				require.PanicsWithValue(t, test.panicValue, func() {
-					router.SetNotFoundHandler(test.notFoundHandler)
+					router.HandleNotFound(test.notFoundHandler)
 				})
 			} else {
 				require.NotPanics(t, func() {
-					router.SetNotFoundHandler(test.notFoundHandler)
+					router.HandleNotFound(test.notFoundHandler)
 				})
 			}
 		})
