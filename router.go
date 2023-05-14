@@ -62,6 +62,18 @@ func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 	r.handlers[node] = handler
 }
 
+// HandleNotFound registers the handler that runs when an incoming request matches no registered routes.
+// If not explicitly called, Lit runs http.NotFound.
+//
+// If handler is nil, HandleNotFound panics.
+func (r *Router) HandleNotFound(handler HandlerFunc) {
+	if handler == nil {
+		panic(ErrNilHandler)
+	}
+
+	r.notFoundHandler = handler
+}
+
 // ServeHTTP dispatches the request to the handler whose pattern and method most closely matches one previously defined.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request) {
 	var (
@@ -87,21 +99,17 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request
 	}
 }
 
-// WithServer sets the server this router uses for listening and serving requests.
-func (r *Router) WithServer(server *http.Server) {
-	r.server = server
-}
-
-// HandleNotFound registers the handler that runs when an incoming request matches no registered routes.
-// If not explicitly called, Lit runs http.NotFound.
+// SetServer sets server as the one this router uses for listening and serving requests.
 //
-// If handler is nil, HandleNotFound panics.
-func (r *Router) HandleNotFound(handler HandlerFunc) {
-	if handler == nil {
-		panic(ErrNilHandler)
+// If ListenAndServe is called, the Addr and Handler fields are overwritten.
+//
+// If server is nil, SetServer panics.
+func (r *Router) SetServer(server *http.Server) {
+	if server == nil {
+		panic("server should not be nil")
 	}
 
-	r.notFoundHandler = handler
+	r.server = server
 }
 
 // ListenAndServe listens on the TCP network address addr and then handle requests on incoming connections.

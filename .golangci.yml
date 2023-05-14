@@ -36,6 +36,7 @@ issues:
         - funlen
         - maintidx
         - goerr113
+        - gosec
 
     - source: 'ok bool'
       linters:

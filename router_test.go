@@ -650,3 +650,51 @@ func TestRouter_HandleNotFound(t *testing.T) {
 		})
 	}
 }
+
+func TestRouter_SetServer(t *testing.T) {
+	t.Parallel()
+
+	type TestCase struct {
+		description string
+		server      *http.Server
+		panics      bool
+		panicValue  any
+	}
+
+	tests := []TestCase{
+		{
+			description: "GivenServerIsNil_ShouldPanic",
+			server:      nil,
+			panics:      true,
+			panicValue:  "server should not be nil",
+		},
+		{
+			description: "GivenServerIsNotNil_ShouldNotPanic",
+			server:      &http.Server{},
+			panics:      false,
+			panicValue:  nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.description, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			router := lit.NewRouter()
+
+			// Act
+			// Assert
+			if test.panics {
+				require.PanicsWithValue(t, test.panicValue, func() {
+					router.SetServer(test.server)
+				})
+			} else {
+				require.NotPanics(t, func() {
+					router.SetServer(test.server)
+				})
+			}
+		})
+	}
+}
