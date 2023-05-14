@@ -30,9 +30,11 @@ type Router struct {
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	defaultNotFoundHandler := func(req *Request) Response {
-		return func(writer http.ResponseWriter) {
+		return CustomResponse(func(writer http.ResponseWriter) error {
 			http.NotFound(writer, req.httpRequest)
-		}
+
+			return nil
+		})
 	}
 
 	defaultServer := &http.Server{ReadHeaderTimeout: defaultReadHeaderTimeout}
@@ -80,7 +82,9 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request
 		return
 	}
 
-	response(writer)
+	if err := response.Write(writer); err != nil {
+		panic(err)
+	}
 }
 
 // WithServer sets the server this router uses for listening and serving requests.
