@@ -36,6 +36,11 @@ func NewRequest(httpRequest *http.Request) *Request {
 	}
 }
 
+// HTTPRequest returns the original http.Request.
+func (r *Request) HTTPRequest() *http.Request {
+	return r.httpRequest
+}
+
 // Context of this request. It is always non-nil.
 //
 // It is cancelled when the client's connection closes, the request is cancelled (with HTTP/2)
