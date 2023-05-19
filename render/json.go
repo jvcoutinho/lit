@@ -12,6 +12,7 @@ import (
 // and sets the product as the response body.
 type JSONResponse struct {
 	*httpResponse
+
 	statusCode int
 	body       any
 }
@@ -22,9 +23,8 @@ func (r *JSONResponse) Write(writer http.ResponseWriter) error {
 		return fmt.Errorf("rendering JSON: %w", err)
 	}
 
-	header := writer.Header()
-	for key, values := range r.Header {
-		header[key] = values
+	if err := r.httpResponse.Write(writer); err != nil {
+		return err
 	}
 
 	writer.WriteHeader(r.statusCode)

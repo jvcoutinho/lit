@@ -12,3 +12,12 @@ func newHTTPResponse() *httpResponse {
 		make(http.Header),
 	}
 }
+
+func (r *httpResponse) Write(writer http.ResponseWriter) error {
+	header := writer.Header()
+	for key, values := range r.Header {
+		header[key] = values
+	}
+
+	return nil
+}
