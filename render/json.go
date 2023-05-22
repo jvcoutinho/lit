@@ -4,17 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/jvcoutinho/lambda/slices"
 )
 
 // JSONResponse sets Content-Type header to application/json, marshals a given object to JSON
 // and sets the product as the response body.
 type JSONResponse struct {
-	*httpResponse
+	*HTTPResponse
 
-	statusCode int
-	body       any
+	body any
 }
 
 func (r *JSONResponse) Write(writer http.ResponseWriter) error {
@@ -23,60 +20,50 @@ func (r *JSONResponse) Write(writer http.ResponseWriter) error {
 		return fmt.Errorf("rendering JSON: %w", err)
 	}
 
-	if err := r.httpResponse.Write(writer); err != nil {
-		return err
-	}
+	r.SetBody(objectBytes)
 
-	writer.WriteHeader(r.statusCode)
-
-	_, err = writer.Write(objectBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.HTTPResponse.Write(writer)
 }
 
 // JSON sets Content-Type header to application/json, marshals obj to a JSON representation
 // and sets the product as the response body.
 func JSON(statusCode int, obj any) *JSONResponse {
-	httpResponse := newHTTPResponse()
+	httpResponse := NewHTTPResponse(statusCode, nil)
 	httpResponse.Header().Set("Content-Type", "application/json")
 
 	return &JSONResponse{
-		httpResponse: httpResponse,
-		statusCode:   statusCode,
-		body:         obj,
+		httpResponse,
+		obj,
 	}
 }
 
-// Ok responds the request with Status Code 200 (OK) and an optional body marshalled as JSON.
-func Ok(obj ...any) *JSONResponse {
-	return JSON(http.StatusOK, slices.ElementAtOrDefault(obj, 0))
+// OkJSON responds the request with Status Code 200 (OK) and a body marshalled as JSON.
+func OkJSON(obj any) *JSONResponse {
+	return JSON(http.StatusOK, obj)
 }
 
-// BadRequest responds the request with Status Code 400 (Bad Request) and an optional body marshalled as JSON.
-func BadRequest(obj ...any) *JSONResponse {
-	return JSON(http.StatusBadRequest, slices.ElementAtOrDefault(obj, 0))
+// BadRequestJSON responds the request with Status Code 400 (Bad Request) and a body marshalled as JSON.
+func BadRequestJSON(obj any) *JSONResponse {
+	return JSON(http.StatusBadRequest, obj)
 }
 
-// Unauthorized responds the request with Status Code 401 (Unauthorized) and an optional body marshalled as JSON.
-func Unauthorized(obj ...any) *JSONResponse {
-	return JSON(http.StatusUnauthorized, slices.ElementAtOrDefault(obj, 0))
+// UnauthorizedJSON responds the request with Status Code 401 (Unauthorized) and a body marshalled as JSON.
+func UnauthorizedJSON(obj any) *JSONResponse {
+	return JSON(http.StatusUnauthorized, obj)
 }
 
-// NotFound responds the request with Status Code 404 (Not Found) and an optional body marshalled as JSON.
-func NotFound(obj ...any) *JSONResponse {
-	return JSON(http.StatusNotFound, slices.ElementAtOrDefault(obj, 0))
+// NotFoundJSON responds the request with Status Code 404 (Not Found) and a body marshalled as JSON.
+func NotFoundJSON(obj any) *JSONResponse {
+	return JSON(http.StatusNotFound, obj)
 }
 
-// Conflict responds the request with Status Code 409 (Conflict) and an optional body marshalled as JSON.
-func Conflict(obj ...any) *JSONResponse {
-	return JSON(http.StatusConflict, slices.ElementAtOrDefault(obj, 0))
+// ConflictJSON responds the request with Status Code 409 (Conflict) and a body marshalled as JSON.
+func ConflictJSON(obj any) *JSONResponse {
+	return JSON(http.StatusConflict, obj)
 }
 
-// UnprocessableEntity responds the request with Status Code 422 (Unprocessable Entity) and
+// UnprocessableEntityJSON responds the request with Status Code 422 (Unprocessable Entity) and
 // an optional body marshalled as JSON.
-func UnprocessableEntity(obj ...any) *JSONResponse {
-	return JSON(http.StatusUnprocessableEntity, slices.ElementAtOrDefault(obj, 0))
+func UnprocessableEntityJSON(obj any) *JSONResponse {
+	return JSON(http.StatusUnprocessableEntity, obj)
 }
