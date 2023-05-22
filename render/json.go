@@ -41,7 +41,7 @@ func (r *JSONResponse) Write(writer http.ResponseWriter) error {
 // and sets the product as the response body.
 func JSON(statusCode int, obj any) *JSONResponse {
 	httpResponse := newHTTPResponse()
-	httpResponse.Header.Set("Content-Type", "application/json")
+	httpResponse.Header().Set("Content-Type", "application/json")
 
 	return &JSONResponse{
 		httpResponse: httpResponse,

@@ -3,8 +3,7 @@ package render
 import "net/http"
 
 type httpResponse struct {
-	// Header of this response.
-	Header http.Header
+	header http.Header
 }
 
 func newHTTPResponse() *httpResponse {
@@ -15,9 +14,14 @@ func newHTTPResponse() *httpResponse {
 
 func (r *httpResponse) Write(writer http.ResponseWriter) error {
 	header := writer.Header()
-	for key, values := range r.Header {
+	for key, values := range r.header {
 		header[key] = values
 	}
 
 	return nil
+}
+
+// Header of this response.
+func (r *httpResponse) Header() http.Header {
+	return r.header
 }
