@@ -15,6 +15,8 @@ type JSONResponse struct {
 }
 
 func (r *JSONResponse) Write(writer http.ResponseWriter) error {
+	r.header.Set("Content-Type", "application/json")
+
 	objectBytes, err := json.Marshal(r.body)
 	if err != nil {
 		return fmt.Errorf("rendering JSON: %w", err)
@@ -28,11 +30,8 @@ func (r *JSONResponse) Write(writer http.ResponseWriter) error {
 // JSON sets Content-Type header to application/json, marshals obj to a JSON representation
 // and sets the product as the response body.
 func JSON(statusCode int, obj any) *JSONResponse {
-	httpResponse := NewHTTPResponse(statusCode, nil)
-	httpResponse.Header().Set("Content-Type", "application/json")
-
 	return &JSONResponse{
-		httpResponse,
+		NewHTTPResponse(statusCode, nil),
 		obj,
 	}
 }
@@ -66,4 +65,10 @@ func ConflictJSON(obj any) *JSONResponse {
 // an optional body marshalled as JSON.
 func UnprocessableEntityJSON(obj any) *JSONResponse {
 	return JSON(http.StatusUnprocessableEntity, obj)
+}
+
+// InternalServerErrorJSON responds the request with Status Code 500 (Internal Server Error) and
+// an optional body marshalled as JSON.
+func InternalServerErrorJSON(obj any) *JSONResponse {
+	return JSON(http.StatusInternalServerError, obj)
 }

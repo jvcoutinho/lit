@@ -42,3 +42,44 @@ func (r *HTTPResponse) Header() http.Header {
 func (r *HTTPResponse) SetBody(body []byte) {
 	r.body = body
 }
+
+// Ok responds the request with Status Code 200 (OK).
+func Ok() *HTTPResponse {
+	return NewHTTPResponse(http.StatusOK, nil)
+}
+
+// NoContent responds the request with Status Code 204 (No Content).
+func NoContent() *HTTPResponse {
+	return NewHTTPResponse(http.StatusNoContent, nil)
+}
+
+// BadRequest responds the request with Status Code 400 (Bad Request).
+func BadRequest() *HTTPResponse {
+	return NewHTTPResponse(http.StatusBadRequest, nil)
+}
+
+// Unauthorized responds the request with Status Code 401 (Unauthorized).
+func Unauthorized() *HTTPResponse {
+	return NewHTTPResponse(http.StatusUnauthorized, nil)
+}
+
+// NotFound responds the request with Status Code 404 (Not Found).
+func NotFound() *HTTPResponse {
+	return NewHTTPResponse(http.StatusNotFound, nil)
+}
+
+// Conflict responds the request with Status Code 409 (Conflict).
+func Conflict() *HTTPResponse {
+	return NewHTTPResponse(http.StatusConflict, nil)
+}
+
+// UnprocessableEntity responds the request with Status Code 422 (Unprocessable Entity).
+func UnprocessableEntity() *HTTPResponse {
+	return NewHTTPResponse(http.StatusUnprocessableEntity, nil)
+}
+
+// InternalServerError responds the request with Status Code 500 (Internal Server Error) and
+// an optional body marshalled as .
+func InternalServerError() *HTTPResponse {
+	return NewHTTPResponse(http.StatusInternalServerError, nil)
+}

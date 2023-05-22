@@ -37,7 +37,6 @@ issues:
         - maintidx
         - goerr113
         - gosec
-
-    - source: 'ok bool'
+    - path: '**/render/*.go'
       linters:
-        - nonamedreturns
+        - dupl
