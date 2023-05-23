@@ -28,7 +28,7 @@ func (r *YAMLResponse) Write(writer http.ResponseWriter) error {
 	return r.HTTPResponse.Write(writer)
 }
 
-// YAML sets Content-Type header to application/json, marshals obj to a YAML representation
+// YAML sets Content-Type header to text/yaml, marshals obj to a YAML representation
 // and sets the product as the response body.
 func YAML(statusCode int, obj any) *YAMLResponse {
 	return &YAMLResponse{
