@@ -78,18 +78,18 @@ func (r *Router) HandleNotFound(handler HandlerFunc) {
 func (r *Router) ServeHTTP(writer http.ResponseWriter, httpRequest *http.Request) {
 	var (
 		request = NewRequest(httpRequest)
-		handler HandlerFunc
+		handle  HandlerFunc
 	)
 
 	node, arguments := r.trie.Match(httpRequest.URL.Path, httpRequest.Method)
 	if node == nil {
-		handler = r.notFoundHandler
+		handle = r.notFoundHandler
 	} else {
 		request.setURIArguments(arguments)
-		handler = r.handlers[node]
+		handle = r.handlers[node]
 	}
 
-	response := handler(request)
+	response := handle(request)
 	if response == nil {
 		return
 	}
