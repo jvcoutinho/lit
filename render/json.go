@@ -22,7 +22,7 @@ func (r *JSONResponse) Write(writer http.ResponseWriter) error {
 		return fmt.Errorf("rendering JSON: %w", err)
 	}
 
-	r.SetBody(objectBytes)
+	r.setBody(objectBytes)
 
 	return r.HTTPResponse.Write(writer)
 }

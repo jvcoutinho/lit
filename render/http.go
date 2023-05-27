@@ -9,6 +9,7 @@ type HTTPResponse struct {
 	header     http.Header
 }
 
+// NewHTTPResponse creates a new HTTPResponse instance.
 func NewHTTPResponse(statusCode int, body []byte) *HTTPResponse {
 	return &HTTPResponse{
 		statusCode,
@@ -38,8 +39,8 @@ func (r *HTTPResponse) Header() http.Header {
 	return r.header
 }
 
-// SetBody sets this response's body.
-func (r *HTTPResponse) SetBody(body []byte) {
+// setBody sets this response's body.
+func (r *HTTPResponse) setBody(body []byte) {
 	r.body = body
 }
 

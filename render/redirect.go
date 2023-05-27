@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/jvcoutinho/lit"
 )
 
 // RedirectResponse sets the Location header to a given target URL and performs a redirect.
 type RedirectResponse struct {
-	*HTTPResponse
-
-	url string
+	request    *http.Request
+	url        string
+	statusCode int
 }
 
 func (r *RedirectResponse) Write(writer http.ResponseWriter) error {
@@ -19,40 +21,41 @@ func (r *RedirectResponse) Write(writer http.ResponseWriter) error {
 		return fmt.Errorf("parsing URL: %w", err)
 	}
 
-	r.header.Set("Location", parsedURL.String())
+	http.Redirect(writer, r.request, parsedURL.String(), r.statusCode)
 
-	return r.HTTPResponse.Write(writer)
+	return nil
 }
 
 // Redirect performs an HTTP redirect to a new target URL (set as the Location header).
-func Redirect(statusCode int, locationURL string) *RedirectResponse {
+func Redirect(req *lit.Request, locationURL string, statusCode int) *RedirectResponse {
 	return &RedirectResponse{
-		NewHTTPResponse(statusCode, nil),
+		req.HTTPRequest(),
 		locationURL,
+		statusCode,
 	}
 }
 
 // MovedPermanently performs a permanent redirect with Status Code 301 (Moved Permanently) to a new target URL.
-func MovedPermanently(targetURL string) *RedirectResponse {
-	return Redirect(http.StatusMovedPermanently, targetURL)
+func MovedPermanently(req *lit.Request, targetURL string) *RedirectResponse {
+	return Redirect(req, targetURL, http.StatusMovedPermanently)
 }
 
 // Found performs a temporary redirect with Status Code 302 (Found) to a new target URL.
-func Found(targetURL string) *RedirectResponse {
-	return Redirect(http.StatusFound, targetURL)
+func Found(req *lit.Request, targetURL string) *RedirectResponse {
+	return Redirect(req, targetURL, http.StatusFound)
 }
 
 // SeeOther performs a temporary redirect with Status Code 303 (Found) to a new target URL.
-func SeeOther(targetURL string) *RedirectResponse {
-	return Redirect(http.StatusSeeOther, targetURL)
+func SeeOther(req *lit.Request, targetURL string) *RedirectResponse {
+	return Redirect(req, targetURL, http.StatusSeeOther)
 }
 
 // TemporaryRedirect performs a temporary redirect with Status Code 307 (Temporary Redirect) to a new target URL.
-func TemporaryRedirect(targetURL string) *RedirectResponse {
-	return Redirect(http.StatusTemporaryRedirect, targetURL)
+func TemporaryRedirect(req *lit.Request, targetURL string) *RedirectResponse {
+	return Redirect(req, targetURL, http.StatusTemporaryRedirect)
 }
 
 // PermanentRedirect performs a permanent redirect with Status Code 308 (Permanent Redirect) to a new target URL.
-func PermanentRedirect(targetURL string) *RedirectResponse {
-	return Redirect(http.StatusPermanentRedirect, targetURL)
+func PermanentRedirect(req *lit.Request, targetURL string) *RedirectResponse {
+	return Redirect(req, targetURL, http.StatusPermanentRedirect)
 }
