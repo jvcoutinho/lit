@@ -62,3 +62,8 @@ func TestJSONResponse_Write(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONResponseConstructors(t *testing.T) {
+	t.Parallel()
+
+}
