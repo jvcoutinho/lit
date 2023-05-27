@@ -469,7 +469,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					Pattern: "/users/:id",
 					Method:  http.MethodGet,
 					Handle: func(req *lit.Request) lit.Response {
-						return lit.CustomResponse(func(writer http.ResponseWriter) error {
+						return lit.ResponseFunc(func(writer http.ResponseWriter) error {
 							writer.WriteHeader(http.StatusBadRequest)
 
 							return nil
@@ -492,7 +492,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					Pattern: "/users",
 					Method:  http.MethodGet,
 					Handle: func(req *lit.Request) lit.Response {
-						return lit.CustomResponse(func(writer http.ResponseWriter) error {
+						return lit.ResponseFunc(func(writer http.ResponseWriter) error {
 							writer.WriteHeader(http.StatusBadRequest)
 							_, _ = writer.Write([]byte("body"))
 							writer.Header().Set("Content-Type", "application/json")
@@ -515,7 +515,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			description: "GivenRouteDoesNotExist_AndNotFoundHandlerIsSet_ShouldRunHandler",
 			setUpRouter: func(r *lit.Router) {
 				r.HandleNotFound(func(req *lit.Request) lit.Response {
-					return lit.CustomResponse(func(writer http.ResponseWriter) error {
+					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
 						writer.WriteHeader(http.StatusNotFound)
 						_, _ = writer.Write([]byte("not found"))
 
@@ -545,7 +545,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					Pattern: "/users",
 					Method:  http.MethodGet,
 					Handle: func(req *lit.Request) lit.Response {
-						return lit.CustomResponse(func(writer http.ResponseWriter) error {
+						return lit.ResponseFunc(func(writer http.ResponseWriter) error {
 							return errors.New("error")
 						})
 					},

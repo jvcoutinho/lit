@@ -30,7 +30,7 @@ type Router struct {
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	defaultNotFoundHandler := func(req *Request) Response {
-		return CustomResponse(func(writer http.ResponseWriter) error {
+		return ResponseFunc(func(writer http.ResponseWriter) error {
 			http.NotFound(writer, req.httpRequest)
 
 			return nil
