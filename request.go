@@ -2,9 +2,7 @@ package lit
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"net/url"
 
 	"github.com/jvcoutinho/lambda/maps"
 )
@@ -13,15 +11,6 @@ import (
 type Request struct {
 	httpRequest  *http.Request
 	uriArguments map[string]string
-
-	// Method of this request.
-	Method string
-	// URI of this request.
-	URI *url.URL
-	// Header of this request.
-	Header http.Header
-	// Body of this request.
-	Body io.ReadCloser
 }
 
 // NewRequest creates a new Request instance based on an incoming http.Request.
@@ -29,14 +18,10 @@ func NewRequest(httpRequest *http.Request) *Request {
 	return &Request{
 		httpRequest:  httpRequest,
 		uriArguments: nil,
-		Method:       httpRequest.Method,
-		URI:          httpRequest.URL,
-		Header:       httpRequest.Header,
-		Body:         httpRequest.Body,
 	}
 }
 
-// HTTPRequest returns the original http.Request.
+// HTTPRequest returns the underlying http.Request.
 func (r *Request) HTTPRequest() *http.Request {
 	return r.httpRequest
 }
@@ -53,6 +38,8 @@ func (r *Request) Context() context.Context {
 //
 // For example, if the request URL path is /users/123 and the matching pattern is /users/:id,
 // then URIArguments will return { ":id": "123" }.
+//
+// If the URL pattern does not contain parameters, URIArguments returns nil.
 func (r *Request) URIArguments() map[string]string {
 	return maps.Copy(r.uriArguments)
 }

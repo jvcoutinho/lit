@@ -568,12 +568,13 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			t.Parallel()
 
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(test.method, test.path, nil)
+
 			testRequestHandler := func(route Route) lit.HandlerFunc {
 				return func(req *lit.Request) lit.Response {
 					require.Equal(t, context.Background(), req.Context())
-					require.Equal(t, test.method, req.Method)
-					require.Equal(t, test.path, req.URI.Path)
-					require.Equal(t, test.expectedArguments, req.URIArguments())
+					require.Equal(t, request, req.HTTPRequest())
 
 					return route.Handle(req)
 				}
@@ -586,9 +587,6 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			for _, route := range test.existingRoutes {
 				router.Handle(route.Pattern, route.Method, testRequestHandler(route))
 			}
-
-			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest(test.method, test.path, nil)
 
 			// Act
 			router.ServeHTTP(recorder, request)
