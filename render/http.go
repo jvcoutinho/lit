@@ -64,6 +64,11 @@ func Unauthorized() *HTTPResponse {
 	return NewHTTPResponse(http.StatusUnauthorized, nil)
 }
 
+// Forbidden responds the request with Status Code 403 (Forbidden).
+func Forbidden() *HTTPResponse {
+	return NewHTTPResponse(http.StatusForbidden, nil)
+}
+
 // NotFound responds the request with Status Code 404 (Not Found).
 func NotFound() *HTTPResponse {
 	return NewHTTPResponse(http.StatusNotFound, nil)

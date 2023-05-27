@@ -51,6 +51,11 @@ func UnauthorizedJSON(obj any) *JSONResponse {
 	return JSON(http.StatusUnauthorized, obj)
 }
 
+// ForbiddenJSON responds the request with Status Code 403 (Forbidden) and a body marshalled as JSON.
+func ForbiddenJSON(obj any) *JSONResponse {
+	return JSON(http.StatusForbidden, obj)
+}
+
 // NotFoundJSON responds the request with Status Code 404 (Not Found) and a body marshalled as JSON.
 func NotFoundJSON(obj any) *JSONResponse {
 	return JSON(http.StatusNotFound, obj)
