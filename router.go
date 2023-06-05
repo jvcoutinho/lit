@@ -42,4 +42,17 @@ func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 // ServeHTTP dispatches the request to the handler whose pattern most closely matches the request URL
 // and whose method is the same as the request method.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	handlerNode, arguments, err := r.trie.Match(request.URL.Path, request.Method)
+	if err != nil {
+		http.NotFound(writer, request)
+		return
+	}
+
+	handler := r.handlers[handlerNode]
+
+	req := newRequest(request)
+	req.setURIArguments(arguments)
+
+	res := handler(req)
+	res.Write(writer)
 }

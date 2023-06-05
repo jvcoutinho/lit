@@ -1,7 +1,9 @@
 package lit_test
 
 import (
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/jvcoutinho/lit"
@@ -96,6 +98,88 @@ func TestRouter_Handle(t *testing.T) {
 					router.Handle(test.pattern, test.method, test.handler)
 				})
 			}
+		})
+	}
+}
+
+func TestRouter_ServeHTTP(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		description        string
+		router             *lit.Router
+		uri                string
+		method             string
+		body               io.Reader
+		expectedResponse   string
+		expectedStatusCode int
+	}{
+		{
+			description:        "GivenRouteIsNotRegistered_ShouldReturnNotFoundResponse",
+			router:             lit.NewRouter(),
+			uri:                "/users",
+			method:             http.MethodGet,
+			body:               nil,
+			expectedResponse:   "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			description: "GivenRouteIsRegistered_AndPatternDoesNotContainParameters_ShouldReturnHandlerResponse",
+			router: func() *lit.Router {
+				router := lit.NewRouter()
+				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response {
+					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
+						writer.Write([]byte("response"))
+						return nil
+					})
+				})
+
+				return router
+			}(),
+			uri:                "/users",
+			method:             http.MethodGet,
+			body:               nil,
+			expectedResponse:   "response",
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			description: "GivenRouteIsRegistered_AndPatternContainsParameters_ShouldMatchArguments_AndReturnHandlerResponse",
+			router: func() *lit.Router {
+				router := lit.NewRouter()
+				router.Handle("/users/:id", http.MethodGet, func(r *lit.Request) lit.Response {
+					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
+						require.Equal(t, "123", r.URIArguments()[":id"])
+						return nil
+					})
+				})
+
+				return router
+			}(),
+			uri:                "/users/123",
+			method:             http.MethodGet,
+			body:               nil,
+			expectedResponse:   "",
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.description, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			router := test.router
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(test.method, test.uri, test.body)
+
+			// Act
+			router.ServeHTTP(recorder, request)
+
+			// Assert
+			require.Equal(t, test.expectedResponse, recorder.Body.String())
+			require.Equal(t, test.expectedStatusCode, recorder.Code)
 		})
 	}
 }
