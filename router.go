@@ -1,9 +1,14 @@
 package lit
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/jvcoutinho/lit/internal/trie"
+)
+
+var (
+	ErrNilHandler = errors.New("handler should not be nil")
 )
 
 // HandlerFunc is the standard HTTP handler function in Lit ecossystem.
@@ -28,12 +33,12 @@ func NewRouter() *Router {
 // If the route can't be registered, Handle panics.
 func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 	if handler == nil {
-		panic("handler should not be nil")
+		panic(ErrNilHandler)
 	}
 
 	handlerNode, err := r.trie.Insert(pattern, method)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	r.handlers[handlerNode] = handler
