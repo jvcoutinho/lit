@@ -1,10 +1,10 @@
 package trie
 
-// Node represents a HTTP method or a segment in an URL pattern.
+// Node represents an HTTP method or a segment in a URL pattern.
 //
 // A node can have multiple static children, but only one dynamic child.
 type Node struct {
-	// Either a HTTP method or a static segment in an URL pattern.
+	// Either an HTTP method or a static segment in a URL pattern.
 	StaticChildren map[string]*Node
 	// A parameter segment in an URL pattern.
 	DynamicChild *Node
@@ -18,7 +18,7 @@ func NewNode() *Node {
 	}
 }
 
-// IsTerminal returns true if this node is a leaf (should represent a HTTP method node).
+// IsTerminal returns true if this node is a leaf (should represent an HTTP method node).
 func (n *Node) IsTerminal() bool {
 	return len(n.StaticChildren) == 0 && n.DynamicChild == nil
 }

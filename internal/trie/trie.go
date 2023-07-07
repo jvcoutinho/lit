@@ -14,7 +14,7 @@ var (
 	ErrMatchNotFound                   = errors.New("match not found")
 )
 
-// Trie is a tree whose nodes are either an URL pattern segment or a HTTP method.
+// Trie is a tree whose nodes are either a URL pattern segment or an HTTP method.
 //
 // The trie is constructed in such a way that every path from the root to a leaf corresponds to a route.
 // Inner nodes are pattern segments and leaves are HTTP methods.
