@@ -11,7 +11,7 @@ var (
 	ErrNilHandler = errors.New("handler should not be nil")
 )
 
-// HandlerFunc is the standard HTTP handler function in Lit ecossystem.
+// HandlerFunc is the standard HTTP handler function in Lit ecosystem.
 type HandlerFunc func(*Request) Response
 
 // Router manages, listens and serves HTTP requests.
