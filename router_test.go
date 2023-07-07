@@ -15,7 +15,7 @@ func TestRouter_Handle(t *testing.T) {
 
 	tests := []struct {
 		description string
-		router      *lit.Router
+		setupRouter func(*lit.Router)
 		pattern     string
 		method      string
 		handler     lit.HandlerFunc
@@ -23,7 +23,7 @@ func TestRouter_Handle(t *testing.T) {
 	}{
 		{
 			description: "WhenHandlerIsNil_ShouldPanic",
-			router:      lit.NewRouter(),
+			setupRouter: func(router *lit.Router) {},
 			pattern:     "/users",
 			method:      http.MethodGet,
 			handler:     nil,
@@ -31,7 +31,7 @@ func TestRouter_Handle(t *testing.T) {
 		},
 		{
 			description: "WhenMethodIsEmpty_ShouldPanic",
-			router:      lit.NewRouter(),
+			setupRouter: func(router *lit.Router) {},
 			pattern:     "/users",
 			method:      "",
 			handler:     func(r *lit.Request) lit.Response { return nil },
@@ -39,7 +39,7 @@ func TestRouter_Handle(t *testing.T) {
 		},
 		{
 			description: "WhenPatternDoesNotStartWithSlash_ShouldPanic",
-			router:      lit.NewRouter(),
+			setupRouter: func(router *lit.Router) {},
 			pattern:     "users",
 			method:      http.MethodGet,
 			handler:     func(r *lit.Request) lit.Response { return nil },
@@ -47,7 +47,7 @@ func TestRouter_Handle(t *testing.T) {
 		},
 		{
 			description: "WhenPatternContainsDoubleSlashes_ShouldPanic",
-			router:      lit.NewRouter(),
+			setupRouter: func(router *lit.Router) {},
 			pattern:     "//users",
 			method:      http.MethodGet,
 			handler:     func(r *lit.Request) lit.Response { return nil },
@@ -55,11 +55,9 @@ func TestRouter_Handle(t *testing.T) {
 		},
 		{
 			description: "GivenPatternAndMethodHaveBeenDefinedAlready_ShouldPanic",
-			router: func() *lit.Router {
-				router := lit.NewRouter()
+			setupRouter: func(router *lit.Router) {
 				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
-				return router
-			}(),
+			},
 			pattern:    "/users",
 			method:     http.MethodGet,
 			handler:    func(r *lit.Request) lit.Response { return nil },
@@ -67,15 +65,23 @@ func TestRouter_Handle(t *testing.T) {
 		},
 		{
 			description: "GivenPatternWithDifferentParametersAndMethodHaveBeenDefinedAlready_ShouldPanic",
-			router: func() *lit.Router {
-				router := lit.NewRouter()
+			setupRouter: func(router *lit.Router) {
 				router.Handle("/users/:id", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
-				return router
-			}(),
+			},
 			pattern:    "/users/:user_id",
 			method:     http.MethodGet,
 			handler:    func(r *lit.Request) lit.Response { return nil },
 			panicValue: "parameters are conflicting with defined ones in another route",
+		},
+		{
+			description: "GivenPatternDoesNotExist_ShouldNotPanic",
+			setupRouter: func(router *lit.Router) {
+				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
+			},
+			pattern:    "/users/:user_id",
+			method:     http.MethodGet,
+			handler:    func(r *lit.Request) lit.Response { return nil },
+			panicValue: "",
 		},
 	}
 
@@ -85,13 +91,20 @@ func TestRouter_Handle(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			router := test.router
+			router := lit.NewRouter()
+			test.setupRouter(router)
 
 			// Act
 			// Assert
-			require.PanicsWithError(t, test.panicValue, func() {
-				router.Handle(test.pattern, test.method, test.handler)
-			})
+			if test.panicValue != "" {
+				require.PanicsWithError(t, test.panicValue, func() {
+					router.Handle(test.pattern, test.method, test.handler)
+				})
+			} else {
+				require.NotPanics(t, func() {
+					router.Handle(test.pattern, test.method, test.handler)
+				})
+			}
 		})
 	}
 }
