@@ -142,7 +142,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				router := lit.NewRouter()
 				router.Handle("/users/:id", http.MethodGet, func(r *lit.Request) lit.Response {
 					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
-						require.Equal(t, "123", r.URIArguments()[":id"])
+						require.Equal(t, "123", r.URLArguments()[":id"])
 						return nil
 					})
 				})

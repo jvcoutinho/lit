@@ -56,7 +56,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	handler := r.handlers[handlerNode]
 
 	req := newRequest(request)
-	req.setURIArguments(arguments)
+	req.setURLArguments(arguments)
 
 	res := handler(req)
 	res.Write(writer)

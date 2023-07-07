@@ -2,15 +2,13 @@ package lit
 
 import (
 	"net/http"
-
-	"github.com/jvcoutinho/lambda/maps"
 )
 
 // Request is the input of a HandlerFunc.
 type Request struct {
 	httpRequest *http.Request
 
-	uriArguments map[string]string
+	urlArguments map[string]string
 }
 
 func newRequest(httpRequest *http.Request) *Request {
@@ -20,11 +18,14 @@ func newRequest(httpRequest *http.Request) *Request {
 	}
 }
 
-// URIArguments returns a copy of the arguments matched with the pattern parameters.
-func (r *Request) URIArguments() map[string]string {
-	return maps.Copy(r.uriArguments)
+// URLArguments returns this request's URL path arguments matched against the pattern parameters.
+//
+// For example, if the pattern is "/users/:id" and the URI is "/users/123",
+// URLArguments' result will contain the { "id": "123" } key-value pair.
+func (r *Request) URLArguments() map[string]string {
+	return r.urlArguments
 }
 
-func (r *Request) setURIArguments(uriArguments map[string]string) {
-	r.uriArguments = uriArguments
+func (r *Request) setURLArguments(arguments map[string]string) {
+	r.urlArguments = arguments
 }
