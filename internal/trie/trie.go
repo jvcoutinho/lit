@@ -9,9 +9,6 @@ import (
 )
 
 var (
-	ErrMethodIsEmpty                   = errors.New("method should not be empty")
-	ErrPatternDoesNotStartWithSlash    = errors.New("pattern should start with a slash (/)")
-	ErrPatternContainsDoubleSlash      = errors.New("pattern should not contain double slashes (//)")
 	ErrPatternHasBeenDefinedAlready    = errors.New("route already exists")
 	ErrPatternHasConflictingParameters = errors.New("parameters are conflicting with defined ones in another route")
 	ErrMatchNotFound                   = errors.New("match not found")
@@ -84,18 +81,6 @@ func (t *Trie) findTerminal(parent *Node, segments []string, arguments *[]string
 
 // Insert adds a path corresponding to the route of pattern and method and returns the terminal (leaf) node.
 func (t *Trie) Insert(pattern, method string) (*Node, error) {
-	if method == "" {
-		return nil, ErrMethodIsEmpty
-	}
-
-	if !strings.HasPrefix(pattern, "/") {
-		return nil, ErrPatternDoesNotStartWithSlash
-	}
-
-	if strings.Contains(pattern, "//") {
-		return nil, ErrPatternContainsDoubleSlash
-	}
-
 	segments := getSegments(pattern, method)
 
 	if err := t.validate(segments); err != nil {

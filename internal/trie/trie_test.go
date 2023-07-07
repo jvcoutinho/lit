@@ -20,30 +20,6 @@ func TestTrie_Insert(t *testing.T) {
 		expectedError  error
 	}{
 		{
-			description:    "WhenMethodIsEmpty_ShouldReturnError",
-			trie:           trie.New(),
-			pattern:        "/users",
-			method:         "",
-			expectedResult: nil,
-			expectedError:  trie.ErrMethodIsEmpty,
-		},
-		{
-			description:    "WhenPatternDoesNotStartWithSlash_ShouldReturnError",
-			trie:           trie.New(),
-			pattern:        "users",
-			method:         http.MethodGet,
-			expectedResult: nil,
-			expectedError:  trie.ErrPatternDoesNotStartWithSlash,
-		},
-		{
-			description:    "WhenPatternContainsDoubleSlashes_ShouldReturnError",
-			trie:           trie.New(),
-			pattern:        "/users//",
-			method:         http.MethodGet,
-			expectedResult: nil,
-			expectedError:  trie.ErrPatternContainsDoubleSlash,
-		},
-		{
 			description: "GivenPatternAndMethodExists_ShouldReturnError",
 			trie: func() *trie.Trie {
 				trie := trie.New()

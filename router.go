@@ -3,12 +3,16 @@ package lit
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/jvcoutinho/lit/internal/trie"
 )
 
 var (
-	ErrNilHandler = errors.New("handler should not be nil")
+	ErrNilHandler                   = errors.New("handler should not be nil")
+	ErrMethodIsEmpty                = errors.New("method should not be empty")
+	ErrPatternDoesNotStartWithSlash = errors.New("pattern should start with a slash (/)")
+	ErrPatternContainsDoubleSlash   = errors.New("pattern should not contain double slashes (//)")
 )
 
 // HandlerFunc is the standard HTTP handler function in Lit ecosystem.
@@ -34,6 +38,18 @@ func NewRouter() *Router {
 func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 	if handler == nil {
 		panic(ErrNilHandler)
+	}
+
+	if method == "" {
+		panic(ErrMethodIsEmpty)
+	}
+
+	if !strings.HasPrefix(pattern, "/") {
+		panic(ErrPatternDoesNotStartWithSlash)
+	}
+
+	if strings.Contains(pattern, "//") {
+		panic(ErrPatternContainsDoubleSlash)
 	}
 
 	handlerNode, err := r.trie.Insert(pattern, method)
