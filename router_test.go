@@ -114,7 +114,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 
 	tests := []struct {
 		description        string
-		router             *lit.Router
+		setupRouter        func(*lit.Router)
 		uri                string
 		method             string
 		body               io.Reader
@@ -123,7 +123,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 	}{
 		{
 			description:        "GivenRouteIsNotRegistered_ShouldReturnNotFoundResponse",
-			router:             lit.NewRouter(),
+			setupRouter:        func(*lit.Router) {},
 			uri:                "/users",
 			method:             http.MethodGet,
 			body:               nil,
@@ -131,41 +131,25 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
-			description: "GivenRouteIsRegistered_AndPatternDoesNotContainParameters_ShouldReturnHandlerResponse",
-			router: func() *lit.Router {
-				router := lit.NewRouter()
-				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response {
-					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
-						writer.Write([]byte("response"))
-						return nil
-					})
-				})
+			description: "GivenRouteIsRegistered_ShouldReturnHandlerResponse_AndMatchArguments",
+			setupRouter: func(router *lit.Router) {
+				router.Handle("/users/:user_id/books/:book_id", http.MethodGet,
+					func(r *lit.Request) lit.Response {
+						return lit.ResponseFunc(func(writer http.ResponseWriter) error {
+							_, _ = writer.Write([]byte("response"))
 
-				return router
-			}(),
-			uri:                "/users",
+							args := r.URLArguments()
+							require.Equal(t, "1", args[":user_id"])
+							require.Equal(t, "2", args[":book_id"])
+
+							return nil
+						})
+					})
+			},
+			uri:                "/users/1/books/2",
 			method:             http.MethodGet,
 			body:               nil,
 			expectedResponse:   "response",
-			expectedStatusCode: http.StatusOK,
-		},
-		{
-			description: "GivenRouteIsRegistered_AndPatternContainsParameters_ShouldMatchArguments_AndReturnHandlerResponse",
-			router: func() *lit.Router {
-				router := lit.NewRouter()
-				router.Handle("/users/:id", http.MethodGet, func(r *lit.Request) lit.Response {
-					return lit.ResponseFunc(func(writer http.ResponseWriter) error {
-						require.Equal(t, "123", r.URLArguments()[":id"])
-						return nil
-					})
-				})
-
-				return router
-			}(),
-			uri:                "/users/123",
-			method:             http.MethodGet,
-			body:               nil,
-			expectedResponse:   "",
 			expectedStatusCode: http.StatusOK,
 		},
 	}
@@ -176,7 +160,8 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			router := test.router
+			router := lit.NewRouter()
+			test.setupRouter(router)
 
 			recorder := httptest.NewRecorder()
 			request := httptest.NewRequest(test.method, test.uri, test.body)
