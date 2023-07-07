@@ -13,7 +13,7 @@ func TestTrie_Insert(t *testing.T) {
 
 	tests := []struct {
 		description    string
-		trie           *trie.Trie
+		setupTrie      func(*trie.Trie)
 		pattern        string
 		method         string
 		expectedResult *trie.Node
@@ -21,11 +21,9 @@ func TestTrie_Insert(t *testing.T) {
 	}{
 		{
 			description: "GivenPatternAndMethodExists_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users", http.MethodGet)
+			},
 			pattern:        "/users",
 			method:         http.MethodGet,
 			expectedResult: nil,
@@ -33,11 +31,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenPatternAndMethodExistsWithDifferentParameters_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:        "/users/:user_id",
 			method:         http.MethodGet,
 			expectedResult: nil,
@@ -45,11 +41,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenMethodDoesNotExist_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users", http.MethodGet)
+			},
 			pattern:        "/users",
 			method:         http.MethodPost,
 			expectedResult: trie.NewNode(),
@@ -57,11 +51,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenPatternDoesNotExist_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/books", http.MethodGet)
+			},
 			pattern:        "/users",
 			method:         http.MethodGet,
 			expectedResult: trie.NewNode(),
@@ -69,11 +61,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenPatternDoesNotExistWithTrailingSlash_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users", http.MethodGet)
+			},
 			pattern:        "/users/",
 			method:         http.MethodGet,
 			expectedResult: trie.NewNode(),
@@ -81,11 +71,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenPatternDoesNotExistWithParameter_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/books", http.MethodGet)
+			},
 			pattern:        "/users/:id/books",
 			method:         http.MethodGet,
 			expectedResult: trie.NewNode(),
@@ -93,11 +81,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenSubpatternExistsButNotPattern_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:        "/users/:id/books",
 			method:         http.MethodGet,
 			expectedResult: trie.NewNode(),
@@ -105,11 +91,9 @@ func TestTrie_Insert(t *testing.T) {
 		},
 		{
 			description: "GivenSuperpatternExistsButNotPattern_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id/books", http.MethodGet)
+			},
 			pattern:        "/users/:id",
 			method:         http.MethodGet,
 			expectedResult: trie.NewNode(),
@@ -123,10 +107,11 @@ func TestTrie_Insert(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			trie := test.trie
+			tr := trie.New()
+			test.setupTrie(tr)
 
 			// Act
-			actualResult, actualError := trie.Insert(test.pattern, test.method)
+			actualResult, actualError := tr.Insert(test.pattern, test.method)
 
 			// Assert
 			require.Equal(t, test.expectedResult, actualResult)
@@ -140,7 +125,7 @@ func TestTrie_Match(t *testing.T) {
 
 	tests := []struct {
 		description       string
-		trie              *trie.Trie
+		setupTrie         func(*trie.Trie)
 		pattern           string
 		method            string
 		expectedNode      *trie.Node
@@ -149,7 +134,7 @@ func TestTrie_Match(t *testing.T) {
 	}{
 		{
 			description:       "GivenTrieHasNoRoutes_ShouldReturnError",
-			trie:              trie.New(),
+			setupTrie:         func(t *trie.Trie) {},
 			pattern:           "/users",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -158,11 +143,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternDoesNotExistInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/books", http.MethodGet)
+			},
 			pattern:           "/users",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -171,11 +154,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternWithoutTrailingSlashDoesNotExistInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/", http.MethodGet)
+			},
 			pattern:           "/users",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -184,11 +165,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternWithParametersDoesNotExistInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:           "/users/user/123",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -197,11 +176,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternIsSubpatternInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:           "/users",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -210,11 +187,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternIsSuperpatternInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:           "/users/123/books",
 			method:            http.MethodGet,
 			expectedNode:      nil,
@@ -223,11 +198,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenMethodDoesNotExistInTrie_ShouldReturnError",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/books", http.MethodGet)
+			},
 			pattern:           "/user/books",
 			method:            http.MethodPost,
 			expectedNode:      nil,
@@ -236,11 +209,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternAndMethodExistsInTrie_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/books", http.MethodGet)
+			},
 			pattern:           "/users/books",
 			method:            http.MethodGet,
 			expectedNode:      trie.NewNode(),
@@ -249,11 +220,9 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternWithParametersAndMethodExistsInTrie_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+			},
 			pattern:           "/users/123",
 			method:            http.MethodGet,
 			expectedNode:      trie.NewNode(),
@@ -262,12 +231,10 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternWithDifferentMethodsAndMethodExistsInTrie_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id", http.MethodGet)
-				trie.Insert("/users/:user_id", http.MethodPatch)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id", http.MethodGet)
+				_, _ = t.Insert("/users/:user_id", http.MethodPatch)
+			},
 			pattern:           "/users/123",
 			method:            http.MethodPatch,
 			expectedNode:      trie.NewNode(),
@@ -276,12 +243,10 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternAndSuperpatternWithParametersAndMethodExistsInTrie_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:user_id", http.MethodGet)
-				trie.Insert("/users/:id/books", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:user_id", http.MethodGet)
+				_, _ = t.Insert("/users/:id/books", http.MethodGet)
+			},
 			pattern:           "/users/123",
 			method:            http.MethodGet,
 			expectedNode:      trie.NewNode(),
@@ -290,12 +255,10 @@ func TestTrie_Match(t *testing.T) {
 		},
 		{
 			description: "GivenPatternAndSubpatternWithParametersAndMethodExistsInTrie_ShouldReturnNode",
-			trie: func() *trie.Trie {
-				trie := trie.New()
-				trie.Insert("/users/:id/books", http.MethodGet)
-				trie.Insert("/users/", http.MethodGet)
-				return trie
-			}(),
+			setupTrie: func(t *trie.Trie) {
+				_, _ = t.Insert("/users/:id/books", http.MethodGet)
+				_, _ = t.Insert("/users/", http.MethodGet)
+			},
 			pattern:           "/users/123/books",
 			method:            http.MethodGet,
 			expectedNode:      trie.NewNode(),
@@ -310,10 +273,11 @@ func TestTrie_Match(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			trie := test.trie
+			tr := trie.New()
+			test.setupTrie(tr)
 
 			// Act
-			actualNode, actualArguments, actualError := trie.Match(test.pattern, test.method)
+			actualNode, actualArguments, actualError := tr.Match(test.pattern, test.method)
 
 			// Assert
 			require.Equal(t, test.expectedNode, actualNode)
