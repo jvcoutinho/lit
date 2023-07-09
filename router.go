@@ -75,5 +75,7 @@ func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	req.setURLArguments(arguments)
 
 	res := handler(req)
-	res.Write(writer)
+	if err := res.Write(writer); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
 }
