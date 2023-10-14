@@ -2,33 +2,36 @@ package lit
 
 import (
 	"errors"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"strings"
-
-	"github.com/jvcoutinho/lit/internal/trie"
 )
 
 var (
-	ErrNilHandler                   = errors.New("handler should not be nil")
-	ErrMethodIsEmpty                = errors.New("method should not be empty")
-	ErrPatternDoesNotStartWithSlash = errors.New("pattern should start with a slash (/)")
-	ErrPatternContainsDoubleSlash   = errors.New("pattern should not contain double slashes (//)")
+	ErrNilHandler    = errors.New("handler should not be nil")
+	ErrMethodIsEmpty = errors.New("method should not be empty")
 )
 
 // HandlerFunc is the standard HTTP handler function in Lit ecosystem.
 type HandlerFunc func(*Request) Response
 
+func getArguments(params httprouter.Params) map[string]string {
+	arguments := make(map[string]string)
+	for _, param := range params {
+		arguments[param.Key] = param.Value
+	}
+
+	return arguments
+}
+
 // Router manages, listens and serves HTTP requests.
 type Router struct {
-	trie     *trie.Trie
-	handlers map[*trie.Node]HandlerFunc
+	router *httprouter.Router
 }
 
 // NewRouter creates a new Router instance.
 func NewRouter() *Router {
 	return &Router{
-		trie.New(),
-		make(map[*trie.Node]HandlerFunc),
+		httprouter.New(),
 	}
 }
 
@@ -44,38 +47,16 @@ func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 		panic(ErrMethodIsEmpty)
 	}
 
-	if !strings.HasPrefix(pattern, "/") {
-		panic(ErrPatternDoesNotStartWithSlash)
-	}
+	r.router.Handle(method, pattern, func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		request := newRequest(r, getArguments(params))
 
-	if strings.Contains(pattern, "//") {
-		panic(ErrPatternContainsDoubleSlash)
-	}
-
-	handlerNode, err := r.trie.Insert(pattern, method)
-	if err != nil {
-		panic(err)
-	}
-
-	r.handlers[handlerNode] = handler
+		response := handler(request)
+		response.Write(w)
+	})
 }
 
 // ServeHTTP dispatches the request to the handler whose pattern most closely matches the request URL
 // and whose method is the same as the request method.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	handlerNode, arguments, err := r.trie.Match(request.URL.Path, request.Method)
-	if err != nil {
-		http.NotFound(writer, request)
-		return
-	}
-
-	handler := r.handlers[handlerNode]
-
-	req := newRequest(request)
-	req.setURLArguments(arguments)
-
-	res := handler(req)
-	if err := res.Write(writer); err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-	}
+	r.router.ServeHTTP(writer, request)
 }

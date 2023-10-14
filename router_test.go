@@ -15,73 +15,24 @@ func TestRouter_Handle(t *testing.T) {
 
 	tests := []struct {
 		description string
-		setupRouter func(*lit.Router)
 		pattern     string
 		method      string
 		handler     lit.HandlerFunc
-		panicValue  string
+		panicValue  any
 	}{
 		{
 			description: "WhenHandlerIsNil_ShouldPanic",
-			setupRouter: func(router *lit.Router) {},
 			pattern:     "/users",
 			method:      http.MethodGet,
 			handler:     nil,
-			panicValue:  "handler should not be nil",
+			panicValue:  lit.ErrNilHandler,
 		},
 		{
 			description: "WhenMethodIsEmpty_ShouldPanic",
-			setupRouter: func(router *lit.Router) {},
 			pattern:     "/users",
 			method:      "",
 			handler:     func(r *lit.Request) lit.Response { return nil },
-			panicValue:  "method should not be empty",
-		},
-		{
-			description: "WhenPatternDoesNotStartWithSlash_ShouldPanic",
-			setupRouter: func(router *lit.Router) {},
-			pattern:     "users",
-			method:      http.MethodGet,
-			handler:     func(r *lit.Request) lit.Response { return nil },
-			panicValue:  "pattern should start with a slash (/)",
-		},
-		{
-			description: "WhenPatternContainsDoubleSlashes_ShouldPanic",
-			setupRouter: func(router *lit.Router) {},
-			pattern:     "//users",
-			method:      http.MethodGet,
-			handler:     func(r *lit.Request) lit.Response { return nil },
-			panicValue:  "pattern should not contain double slashes (//)",
-		},
-		{
-			description: "GivenPatternAndMethodHaveBeenDefinedAlready_ShouldPanic",
-			setupRouter: func(router *lit.Router) {
-				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
-			},
-			pattern:    "/users",
-			method:     http.MethodGet,
-			handler:    func(r *lit.Request) lit.Response { return nil },
-			panicValue: "route already exists",
-		},
-		{
-			description: "GivenPatternWithDifferentParametersAndMethodHaveBeenDefinedAlready_ShouldPanic",
-			setupRouter: func(router *lit.Router) {
-				router.Handle("/users/:id", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
-			},
-			pattern:    "/users/:user_id",
-			method:     http.MethodGet,
-			handler:    func(r *lit.Request) lit.Response { return nil },
-			panicValue: "parameters are conflicting with defined ones in another route",
-		},
-		{
-			description: "GivenPatternDoesNotExist_ShouldNotPanic",
-			setupRouter: func(router *lit.Router) {
-				router.Handle("/users", http.MethodGet, func(r *lit.Request) lit.Response { return nil })
-			},
-			pattern:    "/users/:user_id",
-			method:     http.MethodGet,
-			handler:    func(r *lit.Request) lit.Response { return nil },
-			panicValue: "",
+			panicValue:  lit.ErrMethodIsEmpty,
 		},
 	}
 
@@ -92,25 +43,28 @@ func TestRouter_Handle(t *testing.T) {
 
 			// Arrange
 			router := lit.NewRouter()
-			test.setupRouter(router)
 
 			// Act
 			// Assert
-			if test.panicValue != "" {
-				require.PanicsWithError(t, test.panicValue, func() {
-					router.Handle(test.pattern, test.method, test.handler)
-				})
-			} else {
-				require.NotPanics(t, func() {
-					router.Handle(test.pattern, test.method, test.handler)
-				})
-			}
+			require.PanicsWithValue(t, test.panicValue, func() {
+				router.Handle(test.pattern, test.method, test.handler)
+			})
 		})
 	}
 }
 
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
+
+	testHandler := func(res string, arguments map[string]string) lit.HandlerFunc {
+		return func(r *lit.Request) lit.Response {
+			return lit.ResponseFunc(func(w http.ResponseWriter) {
+				_, _ = w.Write([]byte(res))
+
+				require.Equal(t, arguments, r.Arguments())
+			})
+		}
+	}
 
 	tests := []struct {
 		description        string
@@ -131,25 +85,15 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
-			description: "GivenRouteIsRegistered_ShouldReturnHandlerResponse_AndMatchArguments",
+			description: "GivenRouteIsRegistered_ShouldReturnHandlerResponse",
 			setupRouter: func(router *lit.Router) {
 				router.Handle("/users/:user_id/books/:book_id", http.MethodGet,
-					func(r *lit.Request) lit.Response {
-						return lit.ResponseFunc(func(writer http.ResponseWriter) error {
-							_, _ = writer.Write([]byte("response"))
-
-							args := r.URLArguments()
-							require.Equal(t, "1", args[":user_id"])
-							require.Equal(t, "2", args[":book_id"])
-
-							return nil
-						})
-					})
+					testHandler("test", map[string]string{"user_id": "1", "book_id": "2"}))
 			},
 			uri:                "/users/1/books/2",
 			method:             http.MethodGet,
 			body:               nil,
-			expectedResponse:   "response",
+			expectedResponse:   "test",
 			expectedStatusCode: http.StatusOK,
 		},
 	}
