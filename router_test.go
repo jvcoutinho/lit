@@ -17,7 +17,7 @@ func TestRouter_Handle(t *testing.T) {
 		description string
 		pattern     string
 		method      string
-		handler     lit.HandlerFunc
+		handler     lit.Handler
 		panicValue  any
 	}{
 		{
@@ -56,7 +56,7 @@ func TestRouter_Handle(t *testing.T) {
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
 
-	testHandler := func(res string, arguments map[string]string) lit.HandlerFunc {
+	testHandler := func(res string, arguments map[string]string) lit.Handler {
 		return func(r *lit.Request) lit.Response {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
 				_, _ = w.Write([]byte(res))

@@ -11,8 +11,8 @@ var (
 	ErrMethodIsEmpty = errors.New("method should not be empty")
 )
 
-// HandlerFunc is the standard HTTP handler function in Lit ecosystem.
-type HandlerFunc func(*Request) Response
+// Handler handles requests.
+type Handler func(*Request) Response
 
 func getArguments(params httprouter.Params) map[string]string {
 	arguments := make(map[string]string)
@@ -28,7 +28,7 @@ type Router struct {
 	router *httprouter.Router
 }
 
-// NewRouter creates a new Router instance.
+// NewRouter creates a new [Router] instance.
 func NewRouter() *Router {
 	return &Router{
 		httprouter.New(),
@@ -37,8 +37,8 @@ func NewRouter() *Router {
 
 // Handle registers the handler for the given pattern and method.
 //
-// If the route can't be registered, Handle panics.
-func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
+// If handler is nil or method is empty or handler can't be registered, Handle panics.
+func (r *Router) Handle(path string, method string, handler Handler) {
 	if handler == nil {
 		panic(ErrNilHandler)
 	}
@@ -47,8 +47,8 @@ func (r *Router) Handle(pattern string, method string, handler HandlerFunc) {
 		panic(ErrMethodIsEmpty)
 	}
 
-	r.router.Handle(method, pattern, func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		request := newRequest(r, getArguments(params))
+	r.router.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		request := NewRequest(r, getArguments(params))
 
 		response := handler(request)
 		response.Write(w)
