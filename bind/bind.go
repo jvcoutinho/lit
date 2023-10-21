@@ -1,10 +1,26 @@
 package bind
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 )
+
+// BindingError occurs when a binding is not possible due to type compatibility.
+// For example, by trying to bind an integer into a boolean variable.
+type BindingError struct {
+	// Incoming value.
+	Value string
+	// Target of the binding.
+	Target reflect.Type
+
+	error
+}
+
+func (e BindingError) Error() string {
+	return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target.Kind())
+}
 
 func bind(value string, target reflect.Value) error {
 	switch target.Kind() {
@@ -40,7 +56,7 @@ func bind(value string, target reflect.Value) error {
 	case reflect.Complex128:
 		return bindComplex(128, value, target)
 	case reflect.Bool:
-		return bindBoolInto(value, target)
+		return bindBool(value, target)
 	default:
 		panic(fmt.Sprintf("unsupported type %s", target.Kind()))
 	}
@@ -49,11 +65,7 @@ func bind(value string, target reflect.Value) error {
 func bindUint(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseUint(value, 10, bitSize)
 	if err != nil {
-		if bitSize == 0 {
-			return fmt.Errorf("parsing %s into uint: %w", value, err)
-		}
-
-		return fmt.Errorf("parsing %s into uint%d: %w", value, bitSize, err)
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetUint(converted)
@@ -64,7 +76,7 @@ func bindUint(bitSize int, value string, target reflect.Value) error {
 func bindInt(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseInt(value, 10, bitSize)
 	if err != nil {
-		return fmt.Errorf("parsing %s into %s: %w", value, target.Kind(), err)
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetInt(converted)
@@ -75,7 +87,7 @@ func bindInt(bitSize int, value string, target reflect.Value) error {
 func bindFloat(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseFloat(value, bitSize)
 	if err != nil {
-		return fmt.Errorf("parsing %s into float%d: %w", value, bitSize, err)
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetFloat(converted)
@@ -86,7 +98,7 @@ func bindFloat(bitSize int, value string, target reflect.Value) error {
 func bindComplex(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseComplex(value, bitSize)
 	if err != nil {
-		return fmt.Errorf("parsing %s into complex%d: %w", value, bitSize, err)
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetComplex(converted)
@@ -94,10 +106,10 @@ func bindComplex(bitSize int, value string, target reflect.Value) error {
 	return nil
 }
 
-func bindBoolInto(value string, target reflect.Value) error {
+func bindBool(value string, target reflect.Value) error {
 	converted, err := strconv.ParseBool(value)
 	if err != nil {
-		return fmt.Errorf("parsing %s into bool: %w", value, err)
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetBool(converted)
