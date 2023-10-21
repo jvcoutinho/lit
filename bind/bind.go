@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 )
+
+// ErrUnsupportedType is returned when a bind to an unsupported type is attempted.
+var ErrUnsupportedType = errors.New("unsupported type for binding")
 
 // BindingError occurs when a binding is not possible due to type compatibility.
 // For example, by trying to bind an integer into a boolean variable.
@@ -14,12 +18,10 @@ type BindingError struct {
 	Value string
 	// Target of the binding.
 	Target reflect.Type
-
-	error
 }
 
 func (e BindingError) Error() string {
-	return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target.Kind())
+	return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target)
 }
 
 func bind(value string, target reflect.Value) error {
@@ -57,15 +59,37 @@ func bind(value string, target reflect.Value) error {
 		return bindComplex(128, value, target)
 	case reflect.Bool:
 		return bindBool(value, target)
+	case reflect.Struct:
+		switch target.Interface().(type) {
+		case time.Time:
+			return bindTime(value, target)
+		}
+
+		fallthrough
 	default:
-		panic(fmt.Sprintf("unsupported type %s", target.Kind()))
+		return ErrUnsupportedType
+	}
+}
+
+func bindAll(values []string, target reflect.Value) error {
+	switch target.Kind() {
+	case reflect.Slice:
+		return bindSlice(values, target)
+	case reflect.Array:
+		return bindArray(values, target)
+	default:
+		if len(values) == 1 {
+			return bind(values[0], target)
+		}
+
+		return ErrUnsupportedType
 	}
 }
 
 func bindUint(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseUint(value, 10, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
 	}
 
 	target.SetUint(converted)
@@ -76,7 +100,7 @@ func bindUint(bitSize int, value string, target reflect.Value) error {
 func bindInt(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseInt(value, 10, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
 	}
 
 	target.SetInt(converted)
@@ -87,7 +111,7 @@ func bindInt(bitSize int, value string, target reflect.Value) error {
 func bindFloat(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseFloat(value, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
 	}
 
 	target.SetFloat(converted)
@@ -98,7 +122,7 @@ func bindFloat(bitSize int, value string, target reflect.Value) error {
 func bindComplex(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseComplex(value, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
 	}
 
 	target.SetComplex(converted)
@@ -109,10 +133,43 @@ func bindComplex(bitSize int, value string, target reflect.Value) error {
 func bindBool(value string, target reflect.Value) error {
 	converted, err := strconv.ParseBool(value)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
 	}
 
 	target.SetBool(converted)
+
+	return nil
+}
+
+func bindTime(value string, target reflect.Value) error {
+	converted, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, err)
+	}
+
+	target.Set(reflect.ValueOf(converted))
+
+	return nil
+}
+
+func bindArray(values []string, target reflect.Value) error {
+	for i, value := range values {
+		if err := bind(value, target.Index(i)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func bindSlice(values []string, target reflect.Value) error {
+	slice := reflect.MakeSlice(target.Type(), len(values), len(values))
+	err := bindArray(values, slice)
+	if err != nil {
+		return err
+	}
+
+	target.Set(slice)
 
 	return nil
 }
