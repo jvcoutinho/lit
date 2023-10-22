@@ -38,7 +38,7 @@ func TestQuery(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			description: "WhenArgumentsMatchBindingTarget_ShouldBind",
+			description: "WhenQueryParametersMatchBindingTarget_ShouldBind",
 			parameters: map[string][]string{
 				"user_id":    {"123"},
 				"book_id":    {"Book Name"},
@@ -55,7 +55,7 @@ func TestQuery(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			description: "WhenArgumentsAreMissing_ShouldIgnoreThem",
+			description: "WhenQueryParametersAreMissingInRequest_ShouldIgnoreThem",
 			parameters: map[string][]string{
 				"user_id": {"123"},
 			},
@@ -66,7 +66,7 @@ func TestQuery(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			description: "WhenArgumentsDoNotMatchBindingTarget_ShouldReturnError",
+			description: "WhenQueryParametersDoNotMatchBindingTarget_ShouldReturnError",
 			parameters: map[string][]string{
 				"user_id": {"123a"},
 			},
