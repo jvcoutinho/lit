@@ -26,6 +26,7 @@ func TestHeader(t *testing.T) {
 		ContentType   string `header:"Content-Type"`
 		Authorization string `header:"Authorization"`
 		ContentLength int    `header:"Content-Length"`
+		Accept        string
 	}
 
 	tests := []struct {

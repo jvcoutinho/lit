@@ -48,3 +48,8 @@ func (r *Request) Body() io.ReadCloser {
 func (r *Request) Header() http.Header {
 	return r.request.Header
 }
+
+// Base returns the underlying http.Request.
+func (r *Request) Base() *http.Request {
+	return r.request
+}
