@@ -34,6 +34,10 @@ func bindQueryParameters(parameters url.Values, structType reflect.Type, structV
 	for i := 0; i < numberFields; i++ {
 		fieldType := structType.Field(i)
 
+		if !fieldType.IsExported() {
+			continue
+		}
+
 		parameter, ok := fieldType.Tag.Lookup("query")
 
 		if !ok {

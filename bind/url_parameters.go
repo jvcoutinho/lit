@@ -33,6 +33,10 @@ func bindURLParameters(parameters map[string]string, structType reflect.Type, st
 	for i := 0; i < numberFields; i++ {
 		fieldType := structType.Field(i)
 
+		if !fieldType.IsExported() {
+			continue
+		}
+
 		parameter, ok := fieldType.Tag.Lookup("uri")
 
 		if !ok {

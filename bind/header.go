@@ -34,6 +34,10 @@ func bindHeader(header http.Header, structType reflect.Type, structValue reflect
 	for i := 0; i < numberFields; i++ {
 		fieldType := structType.Field(i)
 
+		if !fieldType.IsExported() {
+			continue
+		}
+
 		parameter, ok := fieldType.Tag.Lookup("header")
 
 		if !ok {
