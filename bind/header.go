@@ -1,7 +1,6 @@
 package bind
 
 import (
-	"fmt"
 	"github.com/jvcoutinho/lit"
 	"net/http"
 	"reflect"
@@ -29,31 +28,5 @@ func Header[T any](r *lit.Request) (T, error) {
 }
 
 func bindHeader(header http.Header, structType reflect.Type, structValue reflect.Value) error {
-	numberFields := structType.NumField()
-
-	for i := 0; i < numberFields; i++ {
-		fieldType := structType.Field(i)
-
-		if !fieldType.IsExported() {
-			continue
-		}
-
-		parameter, ok := fieldType.Tag.Lookup("header")
-
-		if !ok {
-			continue
-		}
-
-		values, ok := header[parameter]
-
-		if !ok {
-			continue
-		}
-
-		if err := bindAll(values, structValue.Field(i)); err != nil {
-			return fmt.Errorf("%s: %w", parameter, err)
-		}
-	}
-
-	return nil
+	return bindFields[[]string](header, "header", structType, structValue, bindAll)
 }

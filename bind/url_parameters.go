@@ -1,7 +1,6 @@
 package bind
 
 import (
-	"fmt"
 	"github.com/jvcoutinho/lit"
 	"reflect"
 )
@@ -28,31 +27,5 @@ func URLParameters[T any](r *lit.Request) (T, error) {
 }
 
 func bindURLParameters(parameters map[string]string, structType reflect.Type, structValue reflect.Value) error {
-	numberFields := structType.NumField()
-
-	for i := 0; i < numberFields; i++ {
-		fieldType := structType.Field(i)
-
-		if !fieldType.IsExported() {
-			continue
-		}
-
-		parameter, ok := fieldType.Tag.Lookup("uri")
-
-		if !ok {
-			continue
-		}
-
-		argument, ok := parameters[parameter]
-
-		if !ok {
-			continue
-		}
-
-		if err := bind(argument, structValue.Field(i)); err != nil {
-			return fmt.Errorf("%s: %w", parameter, err)
-		}
-	}
-
-	return nil
+	return bindFields[string](parameters, "uri", structType, structValue, bind)
 }

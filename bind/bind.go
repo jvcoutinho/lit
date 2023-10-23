@@ -88,6 +88,42 @@ func bindAll(values []string, target reflect.Value) error {
 	}
 }
 
+func bindFields[T string | []string](
+	values map[string]T,
+	fieldTag string,
+	structType reflect.Type,
+	structValue reflect.Value,
+	bindFunction func(T, reflect.Value) error,
+) error {
+	numberFields := structType.NumField()
+
+	for i := 0; i < numberFields; i++ {
+		fieldType := structType.Field(i)
+
+		if !fieldType.IsExported() {
+			continue
+		}
+
+		parameter, ok := fieldType.Tag.Lookup(fieldTag)
+
+		if !ok {
+			continue
+		}
+
+		value, ok := values[parameter]
+
+		if !ok {
+			continue
+		}
+
+		if err := bindFunction(value, structValue.Field(i)); err != nil {
+			return fmt.Errorf("%s: %w", parameter, err)
+		}
+	}
+
+	return nil
+}
+
 func bindUint(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseUint(value, 10, bitSize)
 	if err != nil {

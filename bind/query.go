@@ -1,7 +1,6 @@
 package bind
 
 import (
-	"fmt"
 	"github.com/jvcoutinho/lit"
 	"net/url"
 	"reflect"
@@ -29,31 +28,5 @@ func Query[T any](r *lit.Request) (T, error) {
 }
 
 func bindQueryParameters(parameters url.Values, structType reflect.Type, structValue reflect.Value) error {
-	numberFields := structType.NumField()
-
-	for i := 0; i < numberFields; i++ {
-		fieldType := structType.Field(i)
-
-		if !fieldType.IsExported() {
-			continue
-		}
-
-		parameter, ok := fieldType.Tag.Lookup("query")
-
-		if !ok {
-			continue
-		}
-
-		values, ok := parameters[parameter]
-
-		if !ok {
-			continue
-		}
-
-		if err := bindAll(values, structValue.Field(i)); err != nil {
-			return fmt.Errorf("%s: %w", parameter, err)
-		}
-	}
-
-	return nil
+	return bindFields[[]string](parameters, "query", structType, structValue, bindAll)
 }
