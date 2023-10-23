@@ -1,3 +1,4 @@
+// Package bind contains model binding features to be used along *lit.Request.
 package bind
 
 import (
@@ -64,7 +65,6 @@ func bind(value string, target reflect.Value) error {
 		case time.Time:
 			return bindTime(value, target)
 		}
-
 		fallthrough
 	default:
 		return ErrUnsupportedType
