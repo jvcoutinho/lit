@@ -46,7 +46,7 @@ func bindURLParameters(parameters map[string]string, structType reflect.Type, st
 		}
 
 		if err := bind(argument, structValue.Field(i)); err != nil {
-			return fmt.Errorf("binding into %s: %w", parameter, err)
+			return fmt.Errorf("%s: %w", parameter, err)
 		}
 	}
 

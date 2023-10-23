@@ -21,8 +21,8 @@ func TestURLParameters(t *testing.T) {
 	t.Parallel()
 
 	type targetStruct struct {
-		UserID int    `argument:"user_id"`
-		BookID string `argument:"book_id"`
+		UserID int    `uri:"user_id"`
+		BookID string `uri:"book_id"`
 		Store  string
 	}
 
@@ -64,7 +64,7 @@ func TestURLParameters(t *testing.T) {
 				UserID: 0,
 				BookID: "",
 			},
-			expectedError: "binding into user_id: 123a is not a valid int",
+			expectedError: "user_id: 123a is not a valid int: invalid syntax",
 		},
 	}
 
@@ -80,13 +80,14 @@ func TestURLParameters(t *testing.T) {
 			result, err := bind.URLParameters[targetStruct](request)
 
 			// Assert
-			require.Equal(t, test.expectedResult, result)
 
 			if test.expectedError == "" {
 				require.NoError(t, err)
 			} else {
 				require.EqualError(t, err, test.expectedError)
 			}
+
+			require.Equal(t, test.expectedResult, result)
 		})
 	}
 }
