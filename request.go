@@ -13,7 +13,13 @@ type Request struct {
 }
 
 // NewRequest creates a new [Request] instance with an underlying [*http.Request].
+//
+// If request is nil, NewRequest panics.
 func NewRequest(request *http.Request, parameters map[string]string) *Request {
+	if request == nil {
+		panic("request must not be nil")
+	}
+
 	return &Request{
 		request,
 		parameters,

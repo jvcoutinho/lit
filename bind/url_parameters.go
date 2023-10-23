@@ -16,7 +16,7 @@ func URLParameters[T any](r *lit.Request) (T, error) {
 	targetValue := reflect.ValueOf(&target).Elem()
 
 	if targetValue.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("%T is not a struct type", target))
+		panic("T must be a struct type")
 	}
 
 	err := bindURLParameters(r.URLParameters(), targetValue.Type(), targetValue)

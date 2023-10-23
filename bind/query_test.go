@@ -11,14 +11,16 @@ import (
 	"time"
 )
 
-func TestQuery_WhenTargetTypeIsNotStruct_ShouldPanic(t *testing.T) {
+func TestQuery_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
 	t.Parallel()
 
-	request := lit.NewRequest(nil, nil)
+	request := lit.NewRequest(
+		httptest.NewRequest(http.MethodGet, "/", nil),
+		nil,
+	)
 
-	require.PanicsWithValue(t, "int is not a struct type", func() {
-		_, _ = bind.Query[int](request)
-	})
+	require.PanicsWithValue(t, "T must be a struct type",
+		func() { _, _ = bind.Query[int](request) })
 }
 
 func TestQuery(t *testing.T) {

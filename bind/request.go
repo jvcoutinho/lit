@@ -2,7 +2,6 @@ package bind
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jvcoutinho/lit"
 	"io"
 	"net/http"
@@ -21,7 +20,7 @@ func Request[T any](r *lit.Request) (T, error) {
 	targetValue := reflect.ValueOf(&target).Elem()
 
 	if targetValue.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("%T is not a struct type", target))
+		panic("T must be a struct type")
 	}
 
 	if r.Body() != http.NoBody {

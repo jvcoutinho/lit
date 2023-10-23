@@ -4,17 +4,21 @@ import (
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
-func TestURLParameters_WhenTargetTypeIsNotStruct_ShouldPanic(t *testing.T) {
+func TestURLParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
 	t.Parallel()
 
-	request := lit.NewRequest(nil, nil)
+	request := lit.NewRequest(
+		httptest.NewRequest(http.MethodGet, "/", nil),
+		nil,
+	)
 
-	require.PanicsWithValue(t, "int is not a struct type", func() {
-		_, _ = bind.URLParameters[int](request)
-	})
+	require.PanicsWithValue(t, "T must be a struct type",
+		func() { _, _ = bind.URLParameters[int](request) })
 }
 
 func TestURLParameters(t *testing.T) {
@@ -74,7 +78,8 @@ func TestURLParameters(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			request := lit.NewRequest(nil, test.arguments)
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			request := lit.NewRequest(r, test.arguments)
 
 			// Act
 			result, err := bind.URLParameters[targetStruct](request)

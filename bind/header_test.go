@@ -9,14 +9,16 @@ import (
 	"testing"
 )
 
-func TestHeader_WhenTargetTypeIsNotStruct_ShouldPanic(t *testing.T) {
+func TestHeader_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
 	t.Parallel()
 
-	request := lit.NewRequest(nil, nil)
+	request := lit.NewRequest(
+		httptest.NewRequest(http.MethodGet, "/", nil),
+		nil,
+	)
 
-	require.PanicsWithValue(t, "int is not a struct type", func() {
-		_, _ = bind.Header[int](request)
-	})
+	require.PanicsWithValue(t, "T must be a struct type",
+		func() { _, _ = bind.Header[int](request) })
 }
 
 func TestHeader(t *testing.T) {
