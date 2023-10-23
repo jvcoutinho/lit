@@ -11,8 +11,16 @@ import (
 
 const nonStructTypeParameter = "T must be a struct type"
 
-// ErrUnsupportedType is returned when a bind to an unsupported type is attempted.
-var ErrUnsupportedType = errors.New("unsupported type for binding")
+type InvalidArrayLengthError struct {
+	// Maximum expected length for the array.
+	ExpectedLength int
+	// Actual length got in the input.
+	ActualLength int
+}
+
+func (e InvalidArrayLengthError) Error() string {
+	return fmt.Sprintf("expected at most %d elements. Got %d", e.ExpectedLength, e.ActualLength)
+}
 
 // BindingError occurs when a binding is not possible due to type compatibility.
 // For example, by trying to bind an integer into a boolean variable.
@@ -69,7 +77,7 @@ func bind(value string, target reflect.Value) error {
 		}
 		fallthrough
 	default:
-		return ErrUnsupportedType
+		panic(fmt.Sprintf("unsupported type %s", target.Type().Name()))
 	}
 }
 
@@ -84,7 +92,7 @@ func bindAll(values []string, target reflect.Value) error {
 			return bind(values[0], target)
 		}
 
-		return ErrUnsupportedType
+		return BindingError{fmt.Sprintf("%v", values), target.Type()}
 	}
 }
 
@@ -191,6 +199,10 @@ func bindTime(value string, target reflect.Value) error {
 }
 
 func bindArray(values []string, target reflect.Value) error {
+	if target.Len() < len(values) {
+		return InvalidArrayLengthError{target.Len(), len(values)}
+	}
+
 	for i, value := range values {
 		if err := bind(value, target.Index(i)); err != nil {
 			return err
