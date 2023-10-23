@@ -17,7 +17,7 @@ func Query[T any](r *lit.Request) (T, error) {
 	targetValue := reflect.ValueOf(&target).Elem()
 
 	if targetValue.Kind() != reflect.Struct {
-		panic("T must be a struct type")
+		panic(nonStructTypeParameter)
 	}
 
 	err := bindQueryParameters(r.URL().Query(), targetValue.Type(), targetValue)

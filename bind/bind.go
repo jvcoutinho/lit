@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const nonStructTypeParameter = "T must be a struct type"
+
 // ErrUnsupportedType is returned when a bind to an unsupported type is attempted.
 var ErrUnsupportedType = errors.New("unsupported type for binding")
 
