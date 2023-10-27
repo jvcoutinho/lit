@@ -5,11 +5,11 @@ import (
 	"reflect"
 )
 
-// URLParameters binds the request's URL arguments into the values of a struct of type T.
+// URIParameters binds the request's URI arguments into the values of a struct of type T.
 // Targeted fields should be annotated with the tag "uri".
 //
-// If T is not a struct type, URLParameters panics.
-func URLParameters[T any](r *lit.Request) (T, error) {
+// If T is not a struct type, URIParameters panics.
+func URIParameters[T any](r *lit.Request) (T, error) {
 	var target T
 
 	targetValue := reflect.ValueOf(&target).Elem()
@@ -18,7 +18,7 @@ func URLParameters[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	err := bindURLParameters(r.URLParameters(), targetValue.Type(), targetValue)
+	err := bindURIParameters(r.URIParameters(), targetValue.Type(), targetValue)
 	if err != nil {
 		return target, err
 	}
@@ -26,6 +26,6 @@ func URLParameters[T any](r *lit.Request) (T, error) {
 	return target, nil
 }
 
-func bindURLParameters(parameters map[string]string, structType reflect.Type, structValue reflect.Value) error {
+func bindURIParameters(parameters map[string]string, structType reflect.Type, structValue reflect.Value) error {
 	return bindFields[string](parameters, "uri", structType, structValue, bind)
 }

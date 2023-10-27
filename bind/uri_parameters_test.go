@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestURLParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
+func TestURIParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
 	t.Parallel()
 
 	request := lit.NewRequest(
@@ -19,10 +19,10 @@ func TestURLParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
 	)
 
 	require.PanicsWithValue(t, "T must be a struct type",
-		func() { _, _ = bind.URLParameters[int](request) })
+		func() { _, _ = bind.URIParameters[int](request) })
 }
 
-func TestURLParameters_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
+func TestURIParameters_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
 	t.Parallel()
 
 	type fieldStruct struct {
@@ -44,10 +44,10 @@ func TestURLParameters_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
 	// Act
 	// Assert
 	require.PanicsWithValue(t, "unsupported type fieldStruct",
-		func() { _, _ = bind.URLParameters[targetStruct](request) })
+		func() { _, _ = bind.URIParameters[targetStruct](request) })
 }
 
-func TestURLParameters_ShouldBindSupportedTypes(t *testing.T) {
+func TestURIParameters_ShouldBindSupportedTypes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -192,7 +192,7 @@ func TestURLParameters_ShouldBindSupportedTypes(t *testing.T) {
 			request := lit.NewRequest(r, test.parameters)
 
 			// Act
-			result, err := bind.URLParameters[bindableTypes](request)
+			result, err := bind.URIParameters[bindableTypes](request)
 
 			// Assert
 			if test.expectedError == "" {
@@ -206,7 +206,7 @@ func TestURLParameters_ShouldBindSupportedTypes(t *testing.T) {
 	}
 }
 
-func TestURLParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.T) {
+func TestURIParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.T) {
 	t.Parallel()
 
 	type targetStruct struct {
@@ -227,7 +227,7 @@ func TestURLParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *
 	request := lit.NewRequest(r, parameters)
 
 	// Act
-	result, err := bind.URLParameters[targetStruct](request)
+	result, err := bind.URIParameters[targetStruct](request)
 
 	// Assert
 	require.NoError(t, err)

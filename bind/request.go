@@ -32,9 +32,9 @@ func Request[T any](r *lit.Request) (T, error) {
 
 	targetType := targetValue.Type()
 
-	urlParameters := r.URLParameters()
+	urlParameters := r.URIParameters()
 	if len(urlParameters) > 0 {
-		if err := bindURLParameters(urlParameters, targetType, targetValue); err != nil {
+		if err := bindURIParameters(urlParameters, targetType, targetValue); err != nil {
 			return target, err
 		}
 	}

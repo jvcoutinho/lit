@@ -26,12 +26,12 @@ func NewRequest(request *http.Request, parameters map[string]string) *Request {
 	}
 }
 
-// URLParameters returns this request's URL path parameters and their values.
+// URIParameters returns this request's URL path parameters and their values.
 //
-// Use [bind.URLParameters] for standard model binding and validation features.
+// Use [bind.URIParameters] for standard model binding and validation features.
 //
 // The keys from this map don't start with ":" prefix.
-func (r *Request) URLParameters() map[string]string {
+func (r *Request) URIParameters() map[string]string {
 	return r.parameters
 }
 
@@ -48,6 +48,16 @@ func (r *Request) Method() string {
 // Body of this request.
 func (r *Request) Body() io.ReadCloser {
 	return r.request.Body
+}
+
+// Form parses and returns the form data of this request, including the request's query parameters and the PATCH, POST
+// or PUT body data.
+func (r *Request) Form() (url.Values, error) {
+	if err := r.request.ParseForm(); err != nil {
+		return nil, err
+	}
+
+	return r.request.Form, nil
 }
 
 // Header of this request.

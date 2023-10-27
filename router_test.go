@@ -61,7 +61,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
 				_, _ = w.Write([]byte(res))
 
-				require.Equal(t, arguments, r.URLParameters())
+				require.Equal(t, arguments, r.URIParameters())
 			})
 		}
 	}
