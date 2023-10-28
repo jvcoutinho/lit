@@ -197,7 +197,7 @@ func TestHeader_ShouldBindSupportedTypes(t *testing.T) {
 		{
 			description:   "Invalid array length",
 			header:        map[string][]string{"array": {"10", "20", "30"}},
-			expectedError: "array: expected at most 2 elements. Got 3",
+			expectedError: "array: [10 20 30] is not a valid [2]int: expected at most 2 elements. Got 3",
 		},
 		{
 			description:   "Invalid field not slice",

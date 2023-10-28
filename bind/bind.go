@@ -4,10 +4,15 @@ package bind
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/exp/constraints"
 	"reflect"
 	"strconv"
 	"time"
 )
+
+type simpleType interface {
+	constraints.Ordered | constraints.Complex | bool | time.Time
+}
 
 const nonStructTypeParameter = "T must be a struct type"
 
@@ -22,17 +27,21 @@ func (e InvalidArrayLengthError) Error() string {
 	return fmt.Sprintf("expected at most %d elements. Got %d", e.ExpectedLength, e.ActualLength)
 }
 
-// BindingError occurs when a binding is not possible due to type compatibility.
-// For example, by trying to bind an integer into a boolean variable.
 type BindingError struct {
 	// Incoming value.
 	Value string
 	// Target of the binding.
 	Target reflect.Type
+	// The actual error.
+	Err error
 }
 
 func (e BindingError) Error() string {
-	return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target)
+	if e.Err == nil {
+		return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target)
+	}
+
+	return fmt.Sprintf("%s is not a valid %s: %s", e.Value, e.Target, e.Err)
 }
 
 func bind(value string, target reflect.Value) error {
@@ -92,7 +101,7 @@ func bindAll(values []string, target reflect.Value) error {
 			return bind(values[0], target)
 		}
 
-		return BindingError{fmt.Sprintf("%v", values), target.Type()}
+		return BindingError{fmt.Sprint(values), target.Type(), nil}
 	}
 }
 
@@ -135,7 +144,7 @@ func bindFields[T string | []string](
 func bindUint(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseUint(value, 10, bitSize)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetUint(converted)
@@ -146,7 +155,7 @@ func bindUint(bitSize int, value string, target reflect.Value) error {
 func bindInt(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseInt(value, 10, bitSize)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetInt(converted)
@@ -157,7 +166,7 @@ func bindInt(bitSize int, value string, target reflect.Value) error {
 func bindFloat(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseFloat(value, bitSize)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetFloat(converted)
@@ -168,7 +177,7 @@ func bindFloat(bitSize int, value string, target reflect.Value) error {
 func bindComplex(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseComplex(value, bitSize)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetComplex(converted)
@@ -179,7 +188,7 @@ func bindComplex(bitSize int, value string, target reflect.Value) error {
 func bindBool(value string, target reflect.Value) error {
 	converted, err := strconv.ParseBool(value)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, errors.Unwrap(err))
+		return BindingError{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetBool(converted)
@@ -190,7 +199,7 @@ func bindBool(value string, target reflect.Value) error {
 func bindTime(value string, target reflect.Value) error {
 	converted, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		return fmt.Errorf("%s: %w", BindingError{value, target.Type()}, err)
+		return BindingError{value, target.Type(), err}
 	}
 
 	target.Set(reflect.ValueOf(converted))
@@ -200,7 +209,8 @@ func bindTime(value string, target reflect.Value) error {
 
 func bindArray(values []string, target reflect.Value) error {
 	if target.Len() < len(values) {
-		return InvalidArrayLengthError{target.Len(), len(values)}
+		return BindingError{fmt.Sprint(values), target.Type(),
+			InvalidArrayLengthError{target.Len(), len(values)}}
 	}
 
 	for i, value := range values {

@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-// URIParameters binds the request's URI arguments into the values of a struct of type T.
+// URIParameters binds the request's URI parameters into the values of a struct of type T.
 // Targeted fields should be annotated with the tag "uri".
 //
 // If T is not a struct type, URIParameters panics.
