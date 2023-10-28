@@ -8,6 +8,8 @@ import (
 // URIParameters binds the request's URI parameters into the values of a struct of type T.
 // Targeted fields should be annotated with the tag "uri".
 //
+// If any field couldn't be bound, URIParameters returns BindingError.
+//
 // If T is not a struct type, URIParameters panics.
 func URIParameters[T any](r *lit.Request) (T, error) {
 	var target T
@@ -18,8 +20,7 @@ func URIParameters[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	err := bindURIParameters(r.URIParameters(), targetValue.Type(), targetValue)
-	if err != nil {
+	if err := bindURIParameters(r.URIParameters(), targetValue.Type(), targetValue); err != nil {
 		return target, err
 	}
 

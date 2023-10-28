@@ -8,7 +8,7 @@ import (
 
 // URIParameter binds a request's URI parameter into a value of a simple type T (either a primitive type or a time.Time).
 //
-// If the value couldn't be bind into T, URIParameter returns a BindingError wrapped with the specific error.
+// If the value couldn't be bound into T, URIParameter returns BindingError.
 //
 // If parameter is not present in the request's defined parameters, URIParameter panics, since this situation
 // is generally an implementation error.

@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
@@ -261,4 +262,17 @@ func TestQuery_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
+}
+
+func ExampleQuery() {
+	type BookQuery struct {
+		PublishYear uint   `query:"publish_year"`
+		Name        string `query:"name"`
+	}
+
+	// URI is /books?publish_year=2009&name=Percy%20Jackson
+	query, _ := bind.Query[BookQuery](r)
+
+	fmt.Println(query.PublishYear, query.Name)
+	// Output: 2009 Percy Jackson
 }

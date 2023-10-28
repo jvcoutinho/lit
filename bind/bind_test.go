@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"bytes"
 	"github.com/jvcoutinho/lit"
 	"net/http"
 	"net/http/httptest"
@@ -29,10 +30,18 @@ type bindableTypes struct {
 	Array      [2]int     `uri:"array" query:"array" header:"array"`
 }
 
-var request = lit.NewRequest(
-	httptest.NewRequest(http.MethodPost, "/users/user_1/books/book_1", nil),
-	map[string]string{"user_id": "123", "book_id": "book_1"},
-)
+func testRequest() *lit.Request {
+	body := bytes.NewBufferString(`{"name":"Percy Jackson","publishYear":2009}`)
+
+	r := httptest.NewRequest(
+		http.MethodPost, "/users/user_1/books/book_1?publish_year=2009&name=Percy%20Jackson", body)
+	r.Header.Add("Content-Length", "150")
+	r.Header.Add("Authorization", "Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH")
+
+	return lit.NewRequest(r, map[string]string{"user_id": "123", "book_id": "book_1"})
+}
+
+var r = testRequest()
 
 //func testBinding[T any, V bindableSingleValueTypes | bindableMultipleValueTypes](
 //	t *testing.T,

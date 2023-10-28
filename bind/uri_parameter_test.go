@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
@@ -374,4 +375,14 @@ func TestURIParameter_ShouldBindSupportedTypes(t *testing.T) {
 			require.Equal(t, test.expectedResult, result)
 		})
 	}
+}
+
+func ExampleURIParameter() {
+	// Registered path was /users/:user_id/books/:book_id
+	// URI is /users/123/books/book_1
+	userID, _ := bind.URIParameter[int](r, "user_id")
+	bookID, _ := bind.URIParameter[string](r, "book_id")
+
+	fmt.Println(userID, bookID)
+	// Output: 123 book_1
 }

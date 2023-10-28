@@ -9,6 +9,8 @@ import (
 // Query binds the request's query parameters into the values of a struct of type T.
 // Targeted fields should be annotated with the tag "query".
 //
+// If any field couldn't be bound, Query returns BindingError.
+//
 // If T is not a struct type, Query panics.
 func Query[T any](r *lit.Request) (T, error) {
 	var target T
@@ -19,8 +21,7 @@ func Query[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	err := bindQueryParameters(r.URL().Query(), targetValue.Type(), targetValue)
-	if err != nil {
+	if err := bindQueryParameters(r.URL().Query(), targetValue.Type(), targetValue); err != nil {
 		return target, err
 	}
 

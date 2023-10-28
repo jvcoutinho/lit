@@ -16,10 +16,11 @@ type simpleType interface {
 
 const nonStructTypeParameter = "T must be a struct type"
 
+// InvalidArrayLengthError is returned when a binding to an array value fails due to mismatched length.
 type InvalidArrayLengthError struct {
 	// Maximum expected length for the array.
 	ExpectedLength int
-	// Actual length got in the input.
+	// Actual mismatched length.
 	ActualLength int
 }
 
@@ -27,6 +28,7 @@ func (e InvalidArrayLengthError) Error() string {
 	return fmt.Sprintf("expected at most %d elements. Got %d", e.ExpectedLength, e.ActualLength)
 }
 
+// BindingError is returned when a binding to a target value fails.
 type BindingError struct {
 	// Incoming value.
 	Value string

@@ -3,6 +3,7 @@ package bind
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"gopkg.in/yaml.v3"
 )
@@ -14,7 +15,7 @@ import (
 //   - "application/xml" or "text/xml" for XML parsing
 //   - "application/x-yaml" for YAML parsing
 //
-// Tags from encoding packages, such as "json" tag, can be used appropriately.
+// Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately.
 //
 // If the Content-Type header is not set nor supported, Body defaults to JSON parsing.
 func Body[T any](r *lit.Request) (T, error) {
@@ -22,10 +23,18 @@ func Body[T any](r *lit.Request) (T, error) {
 
 	switch r.Header().Get("Content-Type") {
 	case "application/xml", "text/xml":
-		return target, xml.NewDecoder(r.Body()).Decode(&target)
-	case "application/x-yaml":
-		return target, yaml.NewDecoder(r.Body()).Decode(&target)
+		if err := xml.NewDecoder(r.Body()).Decode(&target); err != nil {
+			return target, fmt.Errorf("invalid XML: %w", err)
+		}
+	case "application/x-yaml", "text/yaml":
+		if err := yaml.NewDecoder(r.Body()).Decode(&target); err != nil {
+			return target, fmt.Errorf("invalid YAML: %w", err)
+		}
 	default:
-		return target, json.NewDecoder(r.Body()).Decode(&target)
+		if err := json.NewDecoder(r.Body()).Decode(&target); err != nil {
+			return target, fmt.Errorf("invalid JSON: %w", err)
+		}
 	}
+
+	return target, nil
 }

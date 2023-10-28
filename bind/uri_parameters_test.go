@@ -241,9 +241,9 @@ func ExampleURIParameters() {
 		BookID string `uri:"book_id"`
 	}
 
-	// Defined path is /users/:user_id/books/:book_id and
-	// called path is /users/123/books/book_1
-	uri, _ := bind.URIParameters[RequestURIParameters](request)
+	// Registered path was /users/:user_id/books/:book_id
+	// URI is /users/123/books/book_1
+	uri, _ := bind.URIParameters[RequestURIParameters](r)
 
 	fmt.Println(uri.UserID, uri.BookID)
 	// Output: 123 book_1

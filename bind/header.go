@@ -9,6 +9,8 @@ import (
 // Header binds the request's header into the fields of a struct of type T.
 // Targeted fields should be annotated with the tag "header".
 //
+// If any field couldn't be bound, Header returns BindingError.
+//
 // If T is not a struct type, Header panics.
 func Header[T any](r *lit.Request) (T, error) {
 	var target T
@@ -19,8 +21,7 @@ func Header[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	err := bindHeader(r.Header(), targetValue.Type(), targetValue)
-	if err != nil {
+	if err := bindHeader(r.Header(), targetValue.Type(), targetValue); err != nil {
 		return target, err
 	}
 

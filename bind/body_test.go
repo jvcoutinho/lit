@@ -2,6 +2,7 @@ package bind_test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ import (
 func TestBody(t *testing.T) {
 	t.Parallel()
 
-	type targetStruct struct {
+	type result struct {
 		Name      string `json:"name" yaml:"name" xml:"Name"`
 		Age       int    `json:"age" yaml:"age" xml:"Age"`
 		IsMarried bool   `json:"is_married" yaml:"is_married" xml:"IsMarried"`
@@ -27,7 +28,7 @@ func TestBody(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			description: "JSON_WhenArgumentsMatchBindingTarget_ShouldBind",
+			description: "Valid JSON",
 			body: `
 				{
 					"name": "John",
@@ -36,7 +37,7 @@ func TestBody(t *testing.T) {
 				}
 			`,
 			contentType: "application/json",
-			expectedResult: targetStruct{
+			expectedResult: result{
 				Name:      "John",
 				Age:       27,
 				IsMarried: true,
@@ -44,13 +45,26 @@ func TestBody(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			description: "YAML_WhenArgumentsMatchBindingTarget_ShouldBind",
+			description: "Invalid JSON",
+			body: `
+				{
+					"name": John",
+					"age": 27,
+					"is_married": true
+				}
+			`,
+			contentType:    "application/json",
+			expectedResult: result{},
+			expectedError:  "invalid JSON: invalid character 'J' looking for beginning of value",
+		},
+		{
+			description: "Valid YAML 1",
 			body: `
 name: John
 age: 27
 is_married: true`,
 			contentType: "application/x-yaml",
-			expectedResult: targetStruct{
+			expectedResult: result{
 				Name:      "John",
 				Age:       27,
 				IsMarried: true,
@@ -58,7 +72,41 @@ is_married: true`,
 			expectedError: "",
 		},
 		{
-			description: "XML_WhenArgumentsMatchBindingTarget_ShouldBind",
+			description: "Valid YAML 2",
+			body: `
+name: John
+age: 27
+is_married: true`,
+			contentType: "text/yaml",
+			expectedResult: result{
+				Name:      "John",
+				Age:       27,
+				IsMarried: true,
+			},
+			expectedError: "",
+		},
+		{
+			description: "Invalid YAML 1",
+			body: `
+name: John
+ age: 27
+is_married: true`,
+			contentType:    "application/x-yaml",
+			expectedResult: result{},
+			expectedError:  "invalid YAML: yaml: line 3: mapping values are not allowed in this context",
+		},
+		{
+			description: "Invalid YAML 2",
+			body: `
+name: John
+ age: 27
+is_married: true`,
+			contentType:    "text/yaml",
+			expectedResult: result{},
+			expectedError:  "invalid YAML: yaml: line 3: mapping values are not allowed in this context",
+		},
+		{
+			description: "Valid XML 1",
 			body: `
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
@@ -68,12 +116,93 @@ is_married: true`,
 </root>
 			`,
 			contentType: "application/xml",
-			expectedResult: targetStruct{
+			expectedResult: result{
 				Name:      "John",
 				Age:       27,
 				IsMarried: true,
 			},
 			expectedError: "",
+		},
+		{
+			description: "Valid XML 2",
+			body: `
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+  <Name>John</Name>
+  <Age>27</Age>
+  <IsMarried>true</IsMarried>
+</root>
+			`,
+			contentType: "text/xml",
+			expectedResult: result{
+				Name:      "John",
+				Age:       27,
+				IsMarried: true,
+			},
+			expectedError: "",
+		},
+		{
+			description: "Invalid XML 1",
+			body: `
+<?xml version="1.0" encoding="UTF-8" ?>
+<roots>
+  <Name>John</Name>
+  <Age>27</Age>
+  <IsMarried>true</IsMarried>
+</root>
+			`,
+			contentType: "application/xml",
+			expectedResult: result{
+				Name:      "John",
+				Age:       27,
+				IsMarried: true,
+			},
+			expectedError: "invalid XML: XML syntax error on line 7: element <roots> closed by </root>",
+		},
+		{
+			description: "Invalid XML 2",
+			body: `
+<?xml version="1.0" encoding="UTF-8" ?>
+<roots>
+  <Name>John</Name>
+  <Age>27</Age>
+  <IsMarried>true</IsMarried>
+</root>
+			`,
+			contentType: "text/xml",
+			expectedResult: result{
+				Name:      "John",
+				Age:       27,
+				IsMarried: true,
+			},
+			expectedError: "invalid XML: XML syntax error on line 7: element <roots> closed by </root>",
+		},
+		{
+			description: "MissingContentType_ValidJSON",
+			body: `
+				{
+					"name": "John",
+					"age": 27,
+					"is_married": true
+				}
+			`,
+			contentType: "",
+			expectedResult: result{
+				Name:      "John",
+				Age:       27,
+				IsMarried: true,
+			},
+			expectedError: "",
+		},
+		{
+			description: "MissingContentType_InvalidJSON",
+			body: `
+name: John
+age: 27
+is_married: true`,
+			contentType:    "",
+			expectedResult: result{},
+			expectedError:  "invalid JSON: invalid character 'a' in literal null (expecting 'u')",
 		},
 	}
 
@@ -89,7 +218,7 @@ is_married: true`,
 			request := lit.NewRequest(r, nil)
 
 			// Act
-			result, err := bind.Body[targetStruct](request)
+			result, err := bind.Body[result](request)
 
 			// Assert
 			if test.expectedError == "" {
@@ -101,4 +230,20 @@ is_married: true`,
 			require.Equal(t, test.expectedResult, result)
 		})
 	}
+}
+
+func ExampleBody() {
+	type RequestBody struct {
+		Name        string `json:"name"`
+		PublishYear int    `json:"publishYear"`
+	}
+
+	// Body is {"name": "Percy Jackson", "publishYear": 2009}
+	body, _ := bind.Body[RequestBody](r)
+
+	fmt.Println(body.Name)
+	fmt.Println(body.PublishYear)
+	// Output:
+	// Percy Jackson
+	// 2009
 }

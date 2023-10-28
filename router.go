@@ -51,7 +51,9 @@ func (r *Router) Handle(path string, method string, handler Handler) {
 		request := NewRequest(r, getArguments(params))
 
 		response := handler(request)
-		response.Write(w)
+		if response != nil {
+			response.Write(w)
+		}
 	})
 }
 

@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
@@ -260,4 +261,21 @@ func TestHeader_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
+}
+
+func ExampleHeader() {
+	type Header struct {
+		ContentLength uint   `header:"Content-Length"`
+		Authorization string `header:"Authorization"`
+	}
+
+	// Content-Length: 150
+	// Authorization: Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH
+	h, _ := bind.Header[Header](r)
+
+	fmt.Println(h.ContentLength)
+	fmt.Println(h.Authorization)
+	// Output:
+	// 150
+	// Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH
 }
