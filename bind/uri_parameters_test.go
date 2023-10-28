@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"fmt"
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
@@ -232,4 +233,18 @@ func TestURIParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
+}
+
+func ExampleURIParameters() {
+	type RequestURIParameters struct {
+		UserID int    `uri:"user_id"`
+		BookID string `uri:"book_id"`
+	}
+
+	// Defined path is /users/:user_id/books/:book_id and
+	// called path is /users/123/books/book_1
+	uri, _ := bind.URIParameters[RequestURIParameters](request)
+
+	fmt.Println(uri.UserID, uri.BookID)
+	// Output: 123 book_1
 }

@@ -1,6 +1,9 @@
 package bind_test
 
 import (
+	"github.com/jvcoutinho/lit"
+	"net/http"
+	"net/http/httptest"
 	"time"
 )
 
@@ -25,6 +28,11 @@ type bindableTypes struct {
 	Slice      []int      `uri:"slice" query:"slice" header:"slice"`
 	Array      [2]int     `uri:"array" query:"array" header:"array"`
 }
+
+var request = lit.NewRequest(
+	httptest.NewRequest(http.MethodPost, "/users/user_1/books/book_1", nil),
+	map[string]string{"user_id": "123", "book_id": "book_1"},
+)
 
 //func testBinding[T any, V bindableSingleValueTypes | bindableMultipleValueTypes](
 //	t *testing.T,
