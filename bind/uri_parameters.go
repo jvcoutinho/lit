@@ -2,31 +2,16 @@ package bind
 
 import (
 	"github.com/jvcoutinho/lit"
-	"reflect"
 )
 
+const uriParameterTag = "uri"
+
 // URIParameters binds the request's URI parameters into the values of a struct of type T.
-// Targeted fields should be annotated with the tag "uri".
+// Targeted fields should be exported and annotated with the tag "uri". Otherwise, they are ignored.
 //
-// If any field couldn't be bound, URIParameters returns BindingError.
+// If a field can't be bound, URIParameters returns BindingError.
 //
 // If T is not a struct type, URIParameters panics.
 func URIParameters[T any](r *lit.Request) (T, error) {
-	var target T
-
-	targetValue := reflect.ValueOf(&target).Elem()
-
-	if targetValue.Kind() != reflect.Struct {
-		panic(nonStructTypeParameter)
-	}
-
-	if err := bindURIParameters(r.URIParameters(), targetValue.Type(), targetValue); err != nil {
-		return target, err
-	}
-
-	return target, nil
-}
-
-func bindURIParameters(parameters map[string]string, structType reflect.Type, structValue reflect.Value) error {
-	return bindFields[string](parameters, "uri", structType, structValue, bind)
+	return bindStruct[T](r.URIParameters(), uriParameterTag, bind)
 }

@@ -22,7 +22,7 @@ func TestURIParameter_WhenParameterIsNotDefined_ShouldPanic(t *testing.T) {
 
 	// Act
 	// Assert
-	require.PanicsWithValue(t, "book_id has not been defined", func() {
+	require.PanicsWithValue(t, "book_id has not been defined as one of the request parameters: [user_id]", func() {
 		_, _ = bind.URIParameter[int](request, "book_id")
 	})
 }

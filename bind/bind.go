@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-type simpleType interface {
-	constraints.Ordered | constraints.Complex | bool | time.Time
+type primitiveType interface {
+	constraints.Ordered | constraints.Complex | bool
 }
 
 const nonStructTypeParameter = "T must be a struct type"
@@ -106,23 +106,39 @@ func bindAll(values []string, target reflect.Value) error {
 	}
 }
 
+func bindStruct[T any, V string | []string](
+	values map[string]V,
+	tag string,
+	bindFunction func(V, reflect.Value) error,
+) (T, error) {
+	var target T
+
+	targetValue := reflect.ValueOf(&target).Elem()
+
+	if targetValue.Kind() != reflect.Struct {
+		panic(nonStructTypeParameter)
+	}
+
+	fields := reflect.VisibleFields(targetValue.Type())
+
+	return target, bindFields(values, tag, targetValue, fields, bindFunction)
+}
+
 func bindFields[T string | []string](
 	values map[string]T,
 	fieldTag string,
-	structType reflect.Type,
 	structValue reflect.Value,
+	fields []reflect.StructField,
 	bindFunction func(T, reflect.Value) error,
 ) error {
-	numberFields := structType.NumField()
+	for _, field := range fields {
+		fieldValue := structValue.FieldByIndex(field.Index)
 
-	for i := 0; i < numberFields; i++ {
-		fieldType := structType.Field(i)
-
-		if !fieldType.IsExported() {
+		if !fieldValue.CanSet() {
 			continue
 		}
 
-		parameter, ok := fieldType.Tag.Lookup(fieldTag)
+		parameter, ok := field.Tag.Lookup(fieldTag)
 
 		if !ok {
 			continue
@@ -134,7 +150,7 @@ func bindFields[T string | []string](
 			continue
 		}
 
-		if err := bindFunction(value, structValue.Field(i)); err != nil {
+		if err := bindFunction(value, fieldValue); err != nil {
 			return fmt.Errorf("%s: %w", parameter, err)
 		}
 	}

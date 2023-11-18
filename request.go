@@ -60,7 +60,7 @@ func (r *Request) Form() (url.Values, error) {
 	return r.request.Form, nil
 }
 
-// Header of this request.
+// Header fields of this request.
 func (r *Request) Header() http.Header {
 	return r.request.Header
 }
