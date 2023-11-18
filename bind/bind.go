@@ -16,15 +16,14 @@ type simpleType interface {
 
 const nonStructTypeParameter = "T must be a struct type"
 
-// InvalidArrayLengthError is returned when a binding to an array value fails due to mismatched length.
-type InvalidArrayLengthError struct {
+type invalidArrayLengthError struct {
 	// Maximum expected length for the array.
 	ExpectedLength int
 	// Actual mismatched length.
 	ActualLength int
 }
 
-func (e InvalidArrayLengthError) Error() string {
+func (e invalidArrayLengthError) Error() string {
 	return fmt.Sprintf("expected at most %d elements. Got %d", e.ExpectedLength, e.ActualLength)
 }
 
@@ -212,7 +211,7 @@ func bindTime(value string, target reflect.Value) error {
 func bindArray(values []string, target reflect.Value) error {
 	if target.Len() < len(values) {
 		return BindingError{fmt.Sprint(values), target.Type(),
-			InvalidArrayLengthError{target.Len(), len(values)}}
+			invalidArrayLengthError{target.Len(), len(values)}}
 	}
 
 	for i, value := range values {
