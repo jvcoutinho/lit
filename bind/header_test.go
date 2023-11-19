@@ -2,13 +2,14 @@ package bind_test
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/bind"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHeader_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
@@ -264,17 +265,23 @@ func TestHeader_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing
 }
 
 func ExampleHeader() {
+	req := httptest.NewRequest(http.MethodGet, "/books", nil)
+	req.Header.Add("Content-Length", "150")
+	req.Header.Add("Authorization", "Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH")
+
+	r := lit.NewRequest(req, nil)
+
 	type Header struct {
 		ContentLength uint   `header:"Content-Length"`
 		Authorization string `header:"Authorization"`
 	}
 
-	// Content-Length: 150
-	// Authorization: Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH
-	h, _ := bind.Header[Header](r)
+	h, err := bind.Header[Header](r)
+	if err == nil {
+		fmt.Println(h.ContentLength)
+		fmt.Println(h.Authorization)
+	}
 
-	fmt.Println(h.ContentLength)
-	fmt.Println(h.Authorization)
 	// Output:
 	// 150
 	// Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH

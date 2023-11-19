@@ -3,12 +3,13 @@ package bind_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/bind"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBody(t *testing.T) {
@@ -233,16 +234,23 @@ is_married: true`,
 }
 
 func ExampleBody() {
+	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBufferString(`
+		{"name": "Percy Jackson", "publishYear": 2009}
+	`))
+
+	r := lit.NewRequest(req, nil)
+
 	type RequestBody struct {
 		Name        string `json:"name"`
 		PublishYear int    `json:"publishYear"`
 	}
 
-	// Body is {"name": "Percy Jackson", "publishYear": 2009}
-	body, _ := bind.Body[RequestBody](r)
+	body, err := bind.Body[RequestBody](r)
+	if err == nil {
+		fmt.Println(body.Name)
+		fmt.Println(body.PublishYear)
+	}
 
-	fmt.Println(body.Name)
-	fmt.Println(body.PublishYear)
 	// Output:
 	// Percy Jackson
 	// 2009

@@ -2,13 +2,14 @@ package bind_test
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/bind"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
+	"github.com/stretchr/testify/require"
 )
 
 func TestURIParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
@@ -236,15 +237,20 @@ func TestURIParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *
 }
 
 func ExampleURIParameters() {
+	r := lit.NewRequest(
+		httptest.NewRequest(http.MethodGet, "/users/123/books/book_1", nil),
+		map[string]string{"user_id": "123", "book_id": "book_1"},
+	)
+
 	type RequestURIParameters struct {
 		UserID int    `uri:"user_id"`
 		BookID string `uri:"book_id"`
 	}
 
-	// Registered path was /users/:user_id/books/:book_id
-	// URI is /users/123/books/book_1
-	uri, _ := bind.URIParameters[RequestURIParameters](r)
+	uri, err := bind.URIParameters[RequestURIParameters](r)
+	if err == nil {
+		fmt.Println(uri.UserID, uri.BookID)
+	}
 
-	fmt.Println(uri.UserID, uri.BookID)
 	// Output: 123 book_1
 }

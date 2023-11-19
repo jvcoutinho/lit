@@ -2,13 +2,14 @@ package bind_test
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/bind"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
+	"github.com/stretchr/testify/require"
 )
 
 func TestURIParameter_WhenParameterIsNotDefined_ShouldPanic(t *testing.T) {
@@ -378,11 +379,15 @@ func TestURIParameter_ShouldBindSupportedTypes(t *testing.T) {
 }
 
 func ExampleURIParameter() {
-	// Registered path was /users/:user_id/books/:book_id
-	// URI is /users/123/books/book_1
-	userID, _ := bind.URIParameter[int](r, "user_id")
-	bookID, _ := bind.URIParameter[string](r, "book_id")
+	r := lit.NewRequest(
+		httptest.NewRequest(http.MethodGet, "/users/123/books/book_1", nil),
+		map[string]string{"user_id": "123", "book_id": "book_1"},
+	)
 
-	fmt.Println(userID, bookID)
-	// Output: 123 book_1
+	userID, err := bind.URIParameter[int](r, "user_id")
+	if err == nil {
+		fmt.Println(userID)
+	}
+
+	// Output: 123
 }

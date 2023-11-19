@@ -2,14 +2,15 @@ package bind_test
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/bind"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQuery_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
@@ -265,14 +266,20 @@ func TestQuery_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.
 }
 
 func ExampleQuery() {
+	req := httptest.NewRequest(http.MethodGet, "/books", nil)
+	req.URL.RawQuery = "publish_year=2009&name=Percy%20Jackson"
+
+	r := lit.NewRequest(req, nil)
+
 	type BookQuery struct {
 		PublishYear uint   `query:"publish_year"`
 		Name        string `query:"name"`
 	}
 
-	// URI is /books?publish_year=2009&name=Percy%20Jackson
-	query, _ := bind.Query[BookQuery](r)
+	query, err := bind.Query[BookQuery](r)
+	if err == nil {
+		fmt.Println(query.PublishYear, query.Name)
+	}
 
-	fmt.Println(query.PublishYear, query.Name)
 	// Output: 2009 Percy Jackson
 }
