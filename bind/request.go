@@ -8,7 +8,7 @@ import (
 )
 
 // Request binds the request's body, query, header and URI parameters into the fields of a struct of type T.
-// Targeted fields should be exported and annotated with corresponding binding tags.
+// Targeted fields should be exported and annotated with corresponding binding tags. Otherwise, they are ignored.
 //
 // It's an optimized combination of the binding functions [Body], [Query], [Header] and [URIParameters], suitable
 // when you need to read from multiple inputs of the request.

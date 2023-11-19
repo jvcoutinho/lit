@@ -6,7 +6,7 @@ import (
 
 const queryParameterTag = "query"
 
-// Query binds the request's query parameters into the values of a struct of type T.
+// Query binds the request's query parameters into the fields of a struct of type T.
 // Targeted fields should be exported and annotated with the tag "query". Otherwise, they are ignored.
 //
 // If a field can't be bound, Query returns BindingError.

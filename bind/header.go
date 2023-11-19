@@ -7,7 +7,8 @@ import (
 const headerTag = "header"
 
 // Header binds the request's header into the fields of a struct of type T.
-// Targeted fields should be exported and annotated with the tag "header" (case-insensitive).
+// Targeted fields should be exported and annotated with the tag "header" (case-insensitive). Otherwise, they are
+// ignored.
 //
 // If any field couldn't be bound, Header returns BindingError.
 //

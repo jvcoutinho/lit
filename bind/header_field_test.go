@@ -381,8 +381,8 @@ func TestHeaderField_ShouldBindSupportedTypes(t *testing.T) {
 				errMessage = err.Error()
 			}
 
-			require.Equal(t, test.expectedResult, result)
 			require.Equal(t, test.expectedError, errMessage)
+			require.Equal(t, test.expectedResult, result)
 		})
 	}
 }

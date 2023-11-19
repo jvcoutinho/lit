@@ -6,7 +6,7 @@ import (
 
 const uriParameterTag = "uri"
 
-// URIParameters binds the request's URI parameters into the values of a struct of type T.
+// URIParameters binds the request's URI parameters into the fields of a struct of type T.
 // Targeted fields should be exported and annotated with the tag "uri". Otherwise, they are ignored.
 //
 // If a field can't be bound, URIParameters returns BindingError.
