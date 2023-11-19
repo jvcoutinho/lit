@@ -12,54 +12,56 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestURIParameters_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	request := lit.NewRequest(
-		httptest.NewRequest(http.MethodGet, "/", nil),
-		nil,
-	)
-
-	require.PanicsWithValue(t, "T must be a struct type",
-		func() { _, _ = bind.URIParameters[int](request) })
-}
-
-func TestURIParameters_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	type fieldStruct struct {
-		Field int
-	}
-
-	type targetStruct struct {
-		Field fieldStruct `uri:"field"`
-	}
-
-	// Arrange
-	parameters := map[string]string{
-		"field": "123",
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	request := lit.NewRequest(r, parameters)
-
-	// Act
-	// Assert
-	require.PanicsWithValue(t, "unsupported type fieldStruct",
-		func() { _, _ = bind.URIParameters[targetStruct](request) })
-}
-
-func TestURIParameters_ShouldBindSupportedTypes(t *testing.T) {
+func TestURIParameters(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		description    string
 		parameters     map[string]string
-		expectedResult bindableTypes
+		function       func(r *lit.Request) (any, error)
+		expectedResult any
 		expectedError  string
+		shouldPanic    bool
 	}{
 		{
-			description: "Valid",
+			description: "WhenTypeParameterIsNotStruct_ShouldPanic",
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[int](r)
+			},
+			expectedError: "T must be a struct type",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenTargetHasUnbindableField_ShouldPanic",
+			parameters: map[string]string{
+				"field": "123",
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[unbindableField](r)
+			},
+			expectedError: "unbindable type lit.Request",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenFieldIsUnexported_ShouldIgnore",
+			parameters: map[string]string{
+				"unexported": "123",
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldIsMissingFromRequest_ShouldIgnore",
+			parameters:  map[string]string{},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldsAreValid_ShouldBindThem",
 			parameters: map[string]string{
 				"string":     "hi",
 				"uint":       "10",
@@ -79,7 +81,10 @@ func TestURIParameters_ShouldBindSupportedTypes(t *testing.T) {
 				"bool":       "true",
 				"time":       "2023-10-22T00:00:00Z",
 			},
-			expectedResult: bindableTypes{
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{
 				String:     "hi",
 				Uint:       10,
 				Uint8:      10,
@@ -97,88 +102,150 @@ func TestURIParameters_ShouldBindSupportedTypes(t *testing.T) {
 				Complex128: 10.5,
 				Bool:       true,
 				Time:       time.Date(2023, 10, 22, 0, 0, 0, 0, time.UTC),
-				Slice:      nil,
-				Array:      [2]int{},
 			},
 		},
 		{
-			description:   "Invalid uint",
-			parameters:    map[string]string{"uint": "10a"},
-			expectedError: "uint: 10a is not a valid uint: invalid syntax",
+			description: "WhenUintIsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"uint": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint: 10a is not a valid uint: invalid syntax",
 		},
 		{
-			description:   "Invalid uint8",
-			parameters:    map[string]string{"uint8": "10a"},
-			expectedError: "uint8: 10a is not a valid uint8: invalid syntax",
+			description: "WhenUint8IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"uint8": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint8: 10a is not a valid uint8: invalid syntax",
 		},
 		{
-			description:   "Invalid uint16",
-			parameters:    map[string]string{"uint16": "10a"},
-			expectedError: "uint16: 10a is not a valid uint16: invalid syntax",
+			description: "WhenUint16IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"uint16": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint16: 10a is not a valid uint16: invalid syntax",
 		},
 		{
-			description:   "Invalid uint32",
-			parameters:    map[string]string{"uint32": "10a"},
-			expectedError: "uint32: 10a is not a valid uint32: invalid syntax",
+			description: "WhenUint32IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"uint32": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint32: 10a is not a valid uint32: invalid syntax",
 		},
 		{
-			description:   "Invalid uint64",
-			parameters:    map[string]string{"uint64": "10a"},
-			expectedError: "uint64: 10a is not a valid uint64: invalid syntax",
+			description: "WhenUint64IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"uint64": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint64: 10a is not a valid uint64: invalid syntax",
 		},
 		{
-			description:   "Invalid int",
-			parameters:    map[string]string{"int": "10a"},
-			expectedError: "int: 10a is not a valid int: invalid syntax",
+			description: "WhenIntIsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"int": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid int8",
-			parameters:    map[string]string{"int8": "10a"},
-			expectedError: "int8: 10a is not a valid int8: invalid syntax",
+			description: "WhenInt8IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"int8": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int8: 10a is not a valid int8: invalid syntax",
 		},
 		{
-			description:   "Invalid int16",
-			parameters:    map[string]string{"int16": "10a"},
-			expectedError: "int16: 10a is not a valid int16: invalid syntax",
+			description: "WhenInt16IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"int16": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int16: 10a is not a valid int16: invalid syntax",
 		},
 		{
-			description:   "Invalid int32",
-			parameters:    map[string]string{"int32": "10a"},
-			expectedError: "int32: 10a is not a valid int32: invalid syntax",
+			description: "WhenInt32IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"int32": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int32: 10a is not a valid int32: invalid syntax",
 		},
 		{
-			description:   "Invalid int64",
-			parameters:    map[string]string{"int64": "10a"},
-			expectedError: "int64: 10a is not a valid int64: invalid syntax",
+			description: "WhenInt64IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"int64": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int64: 10a is not a valid int64: invalid syntax",
 		},
 		{
-			description:   "Invalid float32",
-			parameters:    map[string]string{"float32": "10a"},
-			expectedError: "float32: 10a is not a valid float32: invalid syntax",
+			description: "WhenFloat32IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"float32": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float32: 10a is not a valid float32: invalid syntax",
 		},
 		{
-			description:   "Invalid float64",
-			parameters:    map[string]string{"float64": "10a"},
-			expectedError: "float64: 10a is not a valid float64: invalid syntax",
+			description: "WhenFloat64IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"float64": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float64: 10a is not a valid float64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex64",
-			parameters:    map[string]string{"complex64": "10a"},
-			expectedError: "complex64: 10a is not a valid complex64: invalid syntax",
+			description: "WhenComplex64IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"complex64": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex64: 10a is not a valid complex64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex128",
-			parameters:    map[string]string{"complex128": "10a"},
-			expectedError: "complex128: 10a is not a valid complex128: invalid syntax",
+			description: "WhenComplex128IsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"complex128": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex128: 10a is not a valid complex128: invalid syntax",
 		},
 		{
-			description:   "Invalid bool",
-			parameters:    map[string]string{"bool": "10a"},
-			expectedError: "bool: 10a is not a valid bool: invalid syntax",
+			description: "WhenBoolIsInvalid_ShouldReturnError",
+			parameters:  map[string]string{"bool": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "bool: 10a is not a valid bool: invalid syntax",
 		},
 		{
-			description: "Invalid time",
+			description: "WhenTimeIsInvalid_ShouldReturnError",
 			parameters:  map[string]string{"time": "10a"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
 			expectedError: `time: 10a is not a valid time.Time: parsing time "10a" as "2006-01-02T15:04:05Z07:00": ` +
 				`cannot parse "10a" as "2006"`,
 		},
@@ -190,50 +257,31 @@ func TestURIParameters_ShouldBindSupportedTypes(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			r := httptest.NewRequest(http.MethodGet, "/", nil)
-			request := lit.NewRequest(r, test.parameters)
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+
+			r := lit.NewRequest(request, test.parameters)
 
 			// Act
-			result, err := bind.URIParameters[bindableTypes](request)
+			if test.shouldPanic {
+				require.PanicsWithValue(t, test.expectedError, func() {
+					_, _ = test.function(r)
+				})
+
+				return
+			}
+
+			result, err := test.function(r)
 
 			// Assert
-			if test.expectedError == "" {
-				require.NoError(t, err)
-			} else {
-				require.EqualError(t, err, test.expectedError)
+			errMessage := ""
+			if err != nil {
+				errMessage = err.Error()
 			}
 
 			require.Equal(t, test.expectedResult, result)
+			require.Equal(t, test.expectedError, errMessage)
 		})
 	}
-}
-
-func TestURIParameters_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.T) {
-	t.Parallel()
-
-	type targetStruct struct {
-		ExportedAndPresent      string `uri:"exported"`
-		ExportedAndNotPresent   string `uri:"not_present"`
-		unexportedAndPresent    int    `uri:"unexported"`
-		unexportedAndNotPresent int    `uri:"unexported_not_present"`
-		Untagged                string
-	}
-
-	// Arrange
-	parameters := map[string]string{
-		"exported":   "123",
-		"unexported": "123",
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	request := lit.NewRequest(r, parameters)
-
-	// Act
-	result, err := bind.URIParameters[targetStruct](request)
-
-	// Assert
-	require.NoError(t, err)
-	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
 }
 
 func ExampleURIParameters() {

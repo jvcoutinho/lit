@@ -4,10 +4,11 @@ package bind
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"reflect"
 	"strconv"
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
 
 type primitiveType interface {
@@ -87,7 +88,7 @@ func bind(value string, target reflect.Value) error {
 		}
 		fallthrough
 	default:
-		panic(fmt.Sprintf("unsupported type %s", target.Type().Name()))
+		panic(fmt.Sprintf("unbindable type %s", target.Type()))
 	}
 }
 

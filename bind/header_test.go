@@ -12,57 +12,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHeader_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	request := lit.NewRequest(
-		httptest.NewRequest(http.MethodGet, "/", nil),
-		nil,
-	)
-
-	require.PanicsWithValue(t, "T must be a struct type",
-		func() { _, _ = bind.Header[int](request) })
-}
-
-func TestHeader_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	type fieldStruct struct {
-		Field int
-	}
-
-	type targetStruct struct {
-		Field fieldStruct `header:"field"`
-	}
-
-	// Arrange
-	header := http.Header{
-		"field": {"123"},
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	r.Header = header
-
-	request := lit.NewRequest(r, nil)
-
-	// Act
-	// Assert
-	require.PanicsWithValue(t, "unsupported type fieldStruct",
-		func() { _, _ = bind.Header[targetStruct](request) })
-}
-
-func TestHeader_ShouldBindSupportedTypes(t *testing.T) {
+func TestHeader(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		description    string
 		header         http.Header
-		expectedResult bindableTypes
+		function       func(r *lit.Request) (any, error)
+		expectedResult any
 		expectedError  string
+		shouldPanic    bool
 	}{
 		{
-			description: "Valid",
-			header: map[string][]string{
+			description: "WhenTypeParameterIsNotStruct_ShouldPanic",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[int](r)
+			},
+			expectedError: "T must be a struct type",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenTargetHasUnbindableField_ShouldPanic",
+			header: http.Header{
+				"field": {"123"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[unbindableField](r)
+			},
+			expectedError: "unbindable type lit.Request",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenFieldIsUnexported_ShouldIgnore",
+			header: http.Header{
+				"unexported": {"123"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldIsMissingFromRequest_ShouldIgnore",
+			header:      http.Header{},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldsAreValid_ShouldBindThem",
+			header: http.Header{
 				"string":     {"hi"},
 				"uint":       {"10"},
 				"uint8":      {"10"},
@@ -83,7 +83,10 @@ func TestHeader_ShouldBindSupportedTypes(t *testing.T) {
 				"slice":      {"2", "3"},
 				"array":      {"2", "3"},
 			},
-			expectedResult: bindableTypes{
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{
 				String:     "hi",
 				Uint:       10,
 				Uint8:      10,
@@ -106,105 +109,185 @@ func TestHeader_ShouldBindSupportedTypes(t *testing.T) {
 			},
 		},
 		{
-			description:   "Invalid uint",
-			header:        map[string][]string{"uint": {"10a"}},
-			expectedError: "uint: 10a is not a valid uint: invalid syntax",
+			description: "WhenUintIsInvalid_ShouldReturnError",
+			header:      http.Header{"uint": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint: 10a is not a valid uint: invalid syntax",
 		},
 		{
-			description:   "Invalid uint8",
-			header:        map[string][]string{"uint8": {"10a"}},
-			expectedError: "uint8: 10a is not a valid uint8: invalid syntax",
+			description: "WhenUint8IsInvalid_ShouldReturnError",
+			header:      http.Header{"uint8": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint8: 10a is not a valid uint8: invalid syntax",
 		},
 		{
-			description:   "Invalid uint16",
-			header:        map[string][]string{"uint16": {"10a"}},
-			expectedError: "uint16: 10a is not a valid uint16: invalid syntax",
+			description: "WhenUint16IsInvalid_ShouldReturnError",
+			header:      http.Header{"uint16": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint16: 10a is not a valid uint16: invalid syntax",
 		},
 		{
-			description:   "Invalid uint32",
-			header:        map[string][]string{"uint32": {"10a"}},
-			expectedError: "uint32: 10a is not a valid uint32: invalid syntax",
+			description: "WhenUint32IsInvalid_ShouldReturnError",
+			header:      http.Header{"uint32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint32: 10a is not a valid uint32: invalid syntax",
 		},
 		{
-			description:   "Invalid uint64",
-			header:        map[string][]string{"uint64": {"10a"}},
-			expectedError: "uint64: 10a is not a valid uint64: invalid syntax",
+			description: "WhenUint64IsInvalid_ShouldReturnError",
+			header:      http.Header{"uint64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint64: 10a is not a valid uint64: invalid syntax",
 		},
 		{
-			description:   "Invalid int",
-			header:        map[string][]string{"int": {"10a"}},
-			expectedError: "int: 10a is not a valid int: invalid syntax",
+			description: "WhenIntIsInvalid_ShouldReturnError",
+			header:      http.Header{"int": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid int8",
-			header:        map[string][]string{"int8": {"10a"}},
-			expectedError: "int8: 10a is not a valid int8: invalid syntax",
+			description: "WhenInt8IsInvalid_ShouldReturnError",
+			header:      http.Header{"int8": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int8: 10a is not a valid int8: invalid syntax",
 		},
 		{
-			description:   "Invalid int16",
-			header:        map[string][]string{"int16": {"10a"}},
-			expectedError: "int16: 10a is not a valid int16: invalid syntax",
+			description: "WhenInt16IsInvalid_ShouldReturnError",
+			header:      http.Header{"int16": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int16: 10a is not a valid int16: invalid syntax",
 		},
 		{
-			description:   "Invalid int32",
-			header:        map[string][]string{"int32": {"10a"}},
-			expectedError: "int32: 10a is not a valid int32: invalid syntax",
+			description: "WhenInt32IsInvalid_ShouldReturnError",
+			header:      http.Header{"int32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int32: 10a is not a valid int32: invalid syntax",
 		},
 		{
-			description:   "Invalid int64",
-			header:        map[string][]string{"int64": {"10a"}},
-			expectedError: "int64: 10a is not a valid int64: invalid syntax",
+			description: "WhenInt64IsInvalid_ShouldReturnError",
+			header:      http.Header{"int64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int64: 10a is not a valid int64: invalid syntax",
 		},
 		{
-			description:   "Invalid float32",
-			header:        map[string][]string{"float32": {"10a"}},
-			expectedError: "float32: 10a is not a valid float32: invalid syntax",
+			description: "WhenFloat32IsInvalid_ShouldReturnError",
+			header:      http.Header{"float32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float32: 10a is not a valid float32: invalid syntax",
 		},
 		{
-			description:   "Invalid float64",
-			header:        map[string][]string{"float64": {"10a"}},
-			expectedError: "float64: 10a is not a valid float64: invalid syntax",
+			description: "WhenFloat64IsInvalid_ShouldReturnError",
+			header:      http.Header{"float64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float64: 10a is not a valid float64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex64",
-			header:        map[string][]string{"complex64": {"10a"}},
-			expectedError: "complex64: 10a is not a valid complex64: invalid syntax",
+			description: "WhenComplex64IsInvalid_ShouldReturnError",
+			header:      http.Header{"complex64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex64: 10a is not a valid complex64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex128",
-			header:        map[string][]string{"complex128": {"10a"}},
-			expectedError: "complex128: 10a is not a valid complex128: invalid syntax",
+			description: "WhenComplex128IsInvalid_ShouldReturnError",
+			header:      http.Header{"complex128": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex128: 10a is not a valid complex128: invalid syntax",
 		},
 		{
-			description:   "Invalid bool",
-			header:        map[string][]string{"bool": {"10a"}},
-			expectedError: "bool: 10a is not a valid bool: invalid syntax",
+			description: "WhenBoolIsInvalid_ShouldReturnError",
+			header:      http.Header{"bool": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "bool: 10a is not a valid bool: invalid syntax",
 		},
 		{
-			description: "Invalid time",
-			header:      map[string][]string{"time": {"10a"}},
+			description: "WhenTimeIsInvalid_ShouldReturnError",
+			header:      http.Header{"time": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
 			expectedError: `time: 10a is not a valid time.Time: parsing time "10a" as "2006-01-02T15:04:05Z07:00": ` +
 				`cannot parse "10a" as "2006"`,
 		},
 		{
-			description:   "Invalid slice element",
-			header:        map[string][]string{"slice": {"10a"}},
-			expectedError: "slice: 10a is not a valid int: invalid syntax",
+			description: "WhenSliceElementIsInvalid_ShouldReturnError",
+			header:      http.Header{"slice": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "slice: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid array element",
-			header:        map[string][]string{"array": {"10a"}},
-			expectedError: "array: 10a is not a valid int: invalid syntax",
+			description: "WhenArrayElementIsInvalid_ShouldReturnError",
+			header:      http.Header{"array": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "array: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid array length",
-			header:        map[string][]string{"array": {"10", "20", "30"}},
-			expectedError: "array: [10 20 30] is not a valid [2]int: expected at most 2 elements. Got 3",
+			description: "WhenArrayLengthIsGreaterThanCapacity_ShouldReturnError",
+			header:      http.Header{"array": {"10", "20", "30"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "array: [10 20 30] is not a valid [2]int: expected at most 2 elements. Got 3",
 		},
 		{
-			description:   "Invalid field not slice",
-			header:        map[string][]string{"int": {"10", "20"}},
-			expectedError: "int: [10 20] is not a valid int",
+			description: "WhenFieldIsInvalidSlice_ShouldReturnError",
+			header:      http.Header{"int": {"10", "20"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int: [10 20] is not a valid int",
 		},
 	}
 
@@ -214,54 +297,32 @@ func TestHeader_ShouldBindSupportedTypes(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			r := httptest.NewRequest(http.MethodGet, "/", nil)
-			r.Header = test.header
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request.Header = test.header
 
-			request := lit.NewRequest(r, nil)
+			r := lit.NewRequest(request, nil)
 
 			// Act
-			result, err := bind.Header[bindableTypes](request)
+			if test.shouldPanic {
+				require.PanicsWithValue(t, test.expectedError, func() {
+					_, _ = test.function(r)
+				})
+
+				return
+			}
+
+			result, err := test.function(r)
 
 			// Assert
-			if test.expectedError == "" {
-				require.NoError(t, err)
-			} else {
-				require.EqualError(t, err, test.expectedError)
+			errMessage := ""
+			if err != nil {
+				errMessage = err.Error()
 			}
 
 			require.Equal(t, test.expectedResult, result)
+			require.Equal(t, test.expectedError, errMessage)
 		})
 	}
-}
-
-func TestHeader_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.T) {
-	t.Parallel()
-
-	type targetStruct struct {
-		ExportedAndPresent      string `header:"exported"`
-		ExportedAndNotPresent   string `header:"not_present"`
-		unexportedAndPresent    int    `header:"unexported"`
-		unexportedAndNotPresent int    `header:"unexported_not_present"`
-		Untagged                string
-	}
-
-	// Arrange
-	header := http.Header{
-		"exported":   {"123"},
-		"unexported": {"123"},
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	r.Header = header
-
-	request := lit.NewRequest(r, nil)
-
-	// Act
-	result, err := bind.Header[targetStruct](request)
-
-	// Assert
-	require.NoError(t, err)
-	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
 }
 
 func ExampleHeader() {

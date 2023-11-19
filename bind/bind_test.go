@@ -1,14 +1,22 @@
 package bind_test
 
 import (
-	"bytes"
-	"github.com/jvcoutinho/lit"
-	"net/http"
-	"net/http/httptest"
 	"time"
+
+	"github.com/jvcoutinho/lit"
 )
 
-type bindableTypes struct {
+type unbindableField struct {
+	Request lit.Request `uri:"field" query:"field" header:"field"`
+}
+
+type ignorableFields struct {
+	unexported string `uri:"unexported" query:"unexported" header:"unexported"`
+	Missing    string `uri:"missing" query:"missing" header:"missing"`
+	Untagged   string
+}
+
+type bindableFields struct {
 	String     string     `uri:"string" query:"string" header:"string"`
 	Uint       uint       `uri:"uint" query:"uint" header:"uint"`
 	Uint8      uint8      `uri:"uint8" query:"uint8" header:"uint8"`
@@ -29,29 +37,3 @@ type bindableTypes struct {
 	Slice      []int      `uri:"slice" query:"slice" header:"slice"`
 	Array      [2]int     `uri:"array" query:"array" header:"array"`
 }
-
-func testRequest() *lit.Request {
-	body := bytes.NewBufferString(`{"name":"Percy Jackson","publishYear":2009}`)
-
-	r := httptest.NewRequest(
-		http.MethodPost, "/users/user_1/books/book_1?publish_year=2009&name=Percy%20Jackson", body)
-	r.Header.Add("Content-Length", "150")
-	r.Header.Add("Authorization", "Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH")
-
-	return lit.NewRequest(r, map[string]string{"user_id": "123", "book_id": "book_1"})
-}
-
-var r = testRequest()
-
-//func testBinding[T any, V bindableSingleValueTypes | bindableMultipleValueTypes](
-//	t *testing.T,
-//	r *lit.Request,
-//	bind func(*lit.Request) (T, error),
-//) {
-//	t.Helper()
-//
-//	tests := []struct{
-//		description string
-//		request string
-//	}
-//}

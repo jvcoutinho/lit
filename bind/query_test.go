@@ -13,57 +13,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQuery_WhenTypeParameterIsNotStruct_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	request := lit.NewRequest(
-		httptest.NewRequest(http.MethodGet, "/", nil),
-		nil,
-	)
-
-	require.PanicsWithValue(t, "T must be a struct type",
-		func() { _, _ = bind.Query[int](request) })
-}
-
-func TestQuery_WhenFieldHasUnsupportedType_ShouldPanic(t *testing.T) {
-	t.Parallel()
-
-	type fieldStruct struct {
-		Field int
-	}
-
-	type targetStruct struct {
-		Field fieldStruct `query:"field"`
-	}
-
-	// Arrange
-	parameters := url.Values{
-		"field": {"123"},
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	r.URL.RawQuery = parameters.Encode()
-
-	request := lit.NewRequest(r, nil)
-
-	// Act
-	// Assert
-	require.PanicsWithValue(t, "unsupported type fieldStruct",
-		func() { _, _ = bind.Query[targetStruct](request) })
-}
-
-func TestQuery_ShouldBindSupportedTypes(t *testing.T) {
+func TestQuery(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		description    string
-		parameters     url.Values
-		expectedResult bindableTypes
+		query          url.Values
+		function       func(r *lit.Request) (any, error)
+		expectedResult any
 		expectedError  string
+		shouldPanic    bool
 	}{
 		{
-			description: "Valid",
-			parameters: map[string][]string{
+			description: "WhenTypeParameterIsNotStruct_ShouldPanic",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[int](r)
+			},
+			expectedError: "T must be a struct type",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenTargetHasUnbindableField_ShouldPanic",
+			query: url.Values{
+				"field": {"123"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[unbindableField](r)
+			},
+			expectedError: "unbindable type lit.Request",
+			shouldPanic:   true,
+		},
+		{
+			description: "WhenFieldIsUnexported_ShouldIgnore",
+			query: url.Values{
+				"unexported": {"123"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldIsMissingFromRequest_ShouldIgnore",
+			query:       url.Values{},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[ignorableFields](r)
+			},
+			expectedResult: ignorableFields{},
+		},
+		{
+			description: "WhenFieldsAreValid_ShouldBindThem",
+			query: url.Values{
 				"string":     {"hi"},
 				"uint":       {"10"},
 				"uint8":      {"10"},
@@ -84,7 +84,10 @@ func TestQuery_ShouldBindSupportedTypes(t *testing.T) {
 				"slice":      {"2", "3"},
 				"array":      {"2", "3"},
 			},
-			expectedResult: bindableTypes{
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{
 				String:     "hi",
 				Uint:       10,
 				Uint8:      10,
@@ -107,105 +110,185 @@ func TestQuery_ShouldBindSupportedTypes(t *testing.T) {
 			},
 		},
 		{
-			description:   "Invalid uint",
-			parameters:    map[string][]string{"uint": {"10a"}},
-			expectedError: "uint: 10a is not a valid uint: invalid syntax",
+			description: "WhenUintIsInvalid_ShouldReturnError",
+			query:       url.Values{"uint": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint: 10a is not a valid uint: invalid syntax",
 		},
 		{
-			description:   "Invalid uint8",
-			parameters:    map[string][]string{"uint8": {"10a"}},
-			expectedError: "uint8: 10a is not a valid uint8: invalid syntax",
+			description: "WhenUint8IsInvalid_ShouldReturnError",
+			query:       url.Values{"uint8": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint8: 10a is not a valid uint8: invalid syntax",
 		},
 		{
-			description:   "Invalid uint16",
-			parameters:    map[string][]string{"uint16": {"10a"}},
-			expectedError: "uint16: 10a is not a valid uint16: invalid syntax",
+			description: "WhenUint16IsInvalid_ShouldReturnError",
+			query:       url.Values{"uint16": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint16: 10a is not a valid uint16: invalid syntax",
 		},
 		{
-			description:   "Invalid uint32",
-			parameters:    map[string][]string{"uint32": {"10a"}},
-			expectedError: "uint32: 10a is not a valid uint32: invalid syntax",
+			description: "WhenUint32IsInvalid_ShouldReturnError",
+			query:       url.Values{"uint32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint32: 10a is not a valid uint32: invalid syntax",
 		},
 		{
-			description:   "Invalid uint64",
-			parameters:    map[string][]string{"uint64": {"10a"}},
-			expectedError: "uint64: 10a is not a valid uint64: invalid syntax",
+			description: "WhenUint64IsInvalid_ShouldReturnError",
+			query:       url.Values{"uint64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint64: 10a is not a valid uint64: invalid syntax",
 		},
 		{
-			description:   "Invalid int",
-			parameters:    map[string][]string{"int": {"10a"}},
-			expectedError: "int: 10a is not a valid int: invalid syntax",
+			description: "WhenIntIsInvalid_ShouldReturnError",
+			query:       url.Values{"int": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid int8",
-			parameters:    map[string][]string{"int8": {"10a"}},
-			expectedError: "int8: 10a is not a valid int8: invalid syntax",
+			description: "WhenInt8IsInvalid_ShouldReturnError",
+			query:       url.Values{"int8": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int8: 10a is not a valid int8: invalid syntax",
 		},
 		{
-			description:   "Invalid int16",
-			parameters:    map[string][]string{"int16": {"10a"}},
-			expectedError: "int16: 10a is not a valid int16: invalid syntax",
+			description: "WhenInt16IsInvalid_ShouldReturnError",
+			query:       url.Values{"int16": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int16: 10a is not a valid int16: invalid syntax",
 		},
 		{
-			description:   "Invalid int32",
-			parameters:    map[string][]string{"int32": {"10a"}},
-			expectedError: "int32: 10a is not a valid int32: invalid syntax",
+			description: "WhenInt32IsInvalid_ShouldReturnError",
+			query:       url.Values{"int32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int32: 10a is not a valid int32: invalid syntax",
 		},
 		{
-			description:   "Invalid int64",
-			parameters:    map[string][]string{"int64": {"10a"}},
-			expectedError: "int64: 10a is not a valid int64: invalid syntax",
+			description: "WhenInt64IsInvalid_ShouldReturnError",
+			query:       url.Values{"int64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int64: 10a is not a valid int64: invalid syntax",
 		},
 		{
-			description:   "Invalid float32",
-			parameters:    map[string][]string{"float32": {"10a"}},
-			expectedError: "float32: 10a is not a valid float32: invalid syntax",
+			description: "WhenFloat32IsInvalid_ShouldReturnError",
+			query:       url.Values{"float32": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float32: 10a is not a valid float32: invalid syntax",
 		},
 		{
-			description:   "Invalid float64",
-			parameters:    map[string][]string{"float64": {"10a"}},
-			expectedError: "float64: 10a is not a valid float64: invalid syntax",
+			description: "WhenFloat64IsInvalid_ShouldReturnError",
+			query:       url.Values{"float64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "float64: 10a is not a valid float64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex64",
-			parameters:    map[string][]string{"complex64": {"10a"}},
-			expectedError: "complex64: 10a is not a valid complex64: invalid syntax",
+			description: "WhenComplex64IsInvalid_ShouldReturnError",
+			query:       url.Values{"complex64": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex64: 10a is not a valid complex64: invalid syntax",
 		},
 		{
-			description:   "Invalid complex128",
-			parameters:    map[string][]string{"complex128": {"10a"}},
-			expectedError: "complex128: 10a is not a valid complex128: invalid syntax",
+			description: "WhenComplex128IsInvalid_ShouldReturnError",
+			query:       url.Values{"complex128": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "complex128: 10a is not a valid complex128: invalid syntax",
 		},
 		{
-			description:   "Invalid bool",
-			parameters:    map[string][]string{"bool": {"10a"}},
-			expectedError: "bool: 10a is not a valid bool: invalid syntax",
+			description: "WhenBoolIsInvalid_ShouldReturnError",
+			query:       url.Values{"bool": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "bool: 10a is not a valid bool: invalid syntax",
 		},
 		{
-			description: "Invalid time",
-			parameters:  map[string][]string{"time": {"10a"}},
+			description: "WhenTimeIsInvalid_ShouldReturnError",
+			query:       url.Values{"time": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
 			expectedError: `time: 10a is not a valid time.Time: parsing time "10a" as "2006-01-02T15:04:05Z07:00": ` +
 				`cannot parse "10a" as "2006"`,
 		},
 		{
-			description:   "Invalid slice element",
-			parameters:    map[string][]string{"slice": {"10a"}},
-			expectedError: "slice: 10a is not a valid int: invalid syntax",
+			description: "WhenSliceElementIsInvalid_ShouldReturnError",
+			query:       url.Values{"slice": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "slice: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid array element",
-			parameters:    map[string][]string{"array": {"10a"}},
-			expectedError: "array: 10a is not a valid int: invalid syntax",
+			description: "WhenArrayElementIsInvalid_ShouldReturnError",
+			query:       url.Values{"array": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "array: 10a is not a valid int: invalid syntax",
 		},
 		{
-			description:   "Invalid array length",
-			parameters:    map[string][]string{"array": {"10", "20", "30"}},
-			expectedError: "array: [10 20 30] is not a valid [2]int: expected at most 2 elements. Got 3",
+			description: "WhenArrayLengthIsGreaterThanCapacity_ShouldReturnError",
+			query:       url.Values{"array": {"10", "20", "30"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "array: [10 20 30] is not a valid [2]int: expected at most 2 elements. Got 3",
 		},
 		{
-			description:   "Invalid field not slice",
-			parameters:    map[string][]string{"int": {"10", "20"}},
-			expectedError: "int: [10 20] is not a valid int",
+			description: "WhenFieldIsInvalidSlice_ShouldReturnError",
+			query:       url.Values{"int": {"10", "20"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "int: [10 20] is not a valid int",
 		},
 	}
 
@@ -215,54 +298,32 @@ func TestQuery_ShouldBindSupportedTypes(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			r := httptest.NewRequest(http.MethodGet, "/", nil)
-			r.URL.RawQuery = test.parameters.Encode()
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request.URL.RawQuery = test.query.Encode()
 
-			request := lit.NewRequest(r, nil)
+			r := lit.NewRequest(request, nil)
 
 			// Act
-			result, err := bind.Query[bindableTypes](request)
+			if test.shouldPanic {
+				require.PanicsWithValue(t, test.expectedError, func() {
+					_, _ = test.function(r)
+				})
+
+				return
+			}
+
+			result, err := test.function(r)
 
 			// Assert
-			if test.expectedError == "" {
-				require.NoError(t, err)
-			} else {
-				require.EqualError(t, err, test.expectedError)
+			errMessage := ""
+			if err != nil {
+				errMessage = err.Error()
 			}
 
 			require.Equal(t, test.expectedResult, result)
+			require.Equal(t, test.expectedError, errMessage)
 		})
 	}
-}
-
-func TestQuery_WhenTagsAreNotPresentOrFieldIsUnexported_ShouldIgnore(t *testing.T) {
-	t.Parallel()
-
-	type targetStruct struct {
-		ExportedAndPresent      string `query:"exported"`
-		ExportedAndNotPresent   string `query:"not_present"`
-		unexportedAndPresent    int    `query:"unexported"`
-		unexportedAndNotPresent int    `query:"unexported_not_present"`
-		Untagged                string
-	}
-
-	// Arrange
-	parameters := url.Values{
-		"exported":   {"123"},
-		"unexported": {"123"},
-	}
-
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	r.URL.RawQuery = parameters.Encode()
-
-	request := lit.NewRequest(r, nil)
-
-	// Act
-	result, err := bind.Query[targetStruct](request)
-
-	// Assert
-	require.NoError(t, err)
-	require.Equal(t, targetStruct{ExportedAndPresent: "123"}, result)
 }
 
 func ExampleQuery() {
