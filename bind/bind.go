@@ -52,6 +52,8 @@ func bind(value string, target reflect.Value) error {
 	case reflect.String:
 		target.SetString(value)
 		return nil
+	case reflect.Pointer:
+		return bindPointer(value, target)
 	case reflect.Uint:
 		return bindUint(0, value, target)
 	case reflect.Uint8:
@@ -91,6 +93,17 @@ func bind(value string, target reflect.Value) error {
 	default:
 		panic(fmt.Sprintf("unbindable type %s", target.Type()))
 	}
+}
+
+func bindPointer(value string, target reflect.Value) error {
+	targetValue := reflect.New(target.Type().Elem())
+	if err := bind(value, targetValue.Elem()); err != nil {
+		return err
+	}
+
+	target.Set(targetValue)
+
+	return nil
 }
 
 func bindAll(values []string, target reflect.Value) error {

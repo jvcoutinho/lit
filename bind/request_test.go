@@ -75,6 +75,7 @@ func TestRequest(t *testing.T) {
 			description: "WhenURIParametersFieldsAreValid_ShouldBindThem",
 			uriParameters: map[string]string{
 				"string":     "hi",
+				"pointer":    "10",
 				"uint":       "10",
 				"uint8":      "10",
 				"uint16":     "10",
@@ -97,6 +98,7 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{
 				String:     "hi",
+				Pointer:    pointerOf(10),
 				Uint:       10,
 				Uint8:      10,
 				Uint16:     10,
@@ -119,6 +121,7 @@ func TestRequest(t *testing.T) {
 			description: "WhenQueryParametersFieldsAreValid_ShouldBindThem",
 			query: url.Values{
 				"string":     {"hi"},
+				"pointer":    {"10"},
 				"uint":       {"10"},
 				"uint8":      {"10"},
 				"uint16":     {"10"},
@@ -143,6 +146,7 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{
 				String:     "hi",
+				Pointer:    pointerOf(10),
 				Uint:       10,
 				Uint8:      10,
 				Uint16:     10,
@@ -167,6 +171,7 @@ func TestRequest(t *testing.T) {
 			description: "WhenHeaderFieldsAreValid_ShouldBindThem",
 			header: http.Header{
 				"string":     {"hi"},
+				"pointer":    {"10"},
 				"uint":       {"10"},
 				"uint8":      {"10"},
 				"uint16":     {"10"},
@@ -191,6 +196,7 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{
 				String:     "hi",
+				Pointer:    pointerOf(10),
 				Uint:       10,
 				Uint8:      10,
 				Uint16:     10,
@@ -216,6 +222,7 @@ func TestRequest(t *testing.T) {
 			body: `
 {
     "string": "hi",
+	"pointer": 10,
     "uint": 10,
     "uint8": 10,
     "uint16": 10,
@@ -244,6 +251,7 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{
 				String:  "hi",
+				Pointer: pointerOf(10),
 				Uint:    10,
 				Uint8:   10,
 				Uint16:  10,

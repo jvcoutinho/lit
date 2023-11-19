@@ -65,6 +65,7 @@ func TestQuery(t *testing.T) {
 			description: "WhenFieldsAreValid_ShouldBindThem",
 			query: url.Values{
 				"string":     {"hi"},
+				"pointer":    {"10"},
 				"uint":       {"10"},
 				"uint8":      {"10"},
 				"uint16":     {"10"},
@@ -89,6 +90,7 @@ func TestQuery(t *testing.T) {
 			},
 			expectedResult: bindableFields{
 				String:     "hi",
+				Pointer:    pointerOf(10),
 				Uint:       10,
 				Uint8:      10,
 				Uint16:     10,
@@ -108,6 +110,15 @@ func TestQuery(t *testing.T) {
 				Slice:      []int{2, 3},
 				Array:      [2]int{2, 3},
 			},
+		},
+		{
+			description: "WhenPointerValueIsInvalid_ShouldReturnError",
+			query:       url.Values{"pointer": {"10a"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Query[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "pointer: 10a is not a valid int: invalid syntax",
 		},
 		{
 			description: "WhenUintIsInvalid_ShouldReturnError",

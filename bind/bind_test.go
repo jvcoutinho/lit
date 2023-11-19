@@ -18,6 +18,7 @@ type ignorableFields struct {
 
 type bindableFields struct {
 	String     string     `uri:"string" query:"string" header:"string" json:"string"`
+	Pointer    *int       `uri:"pointer" query:"pointer" header:"pointer" json:"pointer"`
 	Uint       uint       `uri:"uint" query:"uint" header:"uint" json:"uint"`
 	Uint8      uint8      `uri:"uint8" query:"uint8" header:"uint8" json:"uint8"`
 	Uint16     uint16     `uri:"uint16" query:"uint16" header:"uint16" json:"uint16"`
@@ -36,4 +37,8 @@ type bindableFields struct {
 	Time       time.Time  `uri:"time" query:"time" header:"time" json:"time"`
 	Slice      []int      `uri:"slice" query:"slice" header:"slice" json:"slice"`
 	Array      [2]int     `uri:"array" query:"array" header:"array" json:"array"`
+}
+
+func pointerOf[T any](value T) *T {
+	return &value
 }
