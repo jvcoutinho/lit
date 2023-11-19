@@ -56,7 +56,7 @@ func TestBody(t *testing.T) {
 			`,
 			contentType:    "application/json",
 			expectedResult: result{},
-			expectedError:  "invalid JSON: invalid character 'J' looking for beginning of value",
+			expectedError:  "invalid character 'J' looking for beginning of value",
 		},
 		{
 			description: "Valid YAML 1",
@@ -94,7 +94,7 @@ name: John
 is_married: true`,
 			contentType:    "application/x-yaml",
 			expectedResult: result{},
-			expectedError:  "invalid YAML: yaml: line 3: mapping values are not allowed in this context",
+			expectedError:  "yaml: line 3: mapping values are not allowed in this context",
 		},
 		{
 			description: "Invalid YAML 2",
@@ -104,7 +104,7 @@ name: John
 is_married: true`,
 			contentType:    "text/yaml",
 			expectedResult: result{},
-			expectedError:  "invalid YAML: yaml: line 3: mapping values are not allowed in this context",
+			expectedError:  "yaml: line 3: mapping values are not allowed in this context",
 		},
 		{
 			description: "Valid XML 1",
@@ -158,7 +158,7 @@ is_married: true`,
 				Age:       27,
 				IsMarried: true,
 			},
-			expectedError: "invalid XML: XML syntax error on line 7: element <roots> closed by </root>",
+			expectedError: "XML syntax error on line 7: element <roots> closed by </root>",
 		},
 		{
 			description: "Invalid XML 2",
@@ -176,7 +176,7 @@ is_married: true`,
 				Age:       27,
 				IsMarried: true,
 			},
-			expectedError: "invalid XML: XML syntax error on line 7: element <roots> closed by </root>",
+			expectedError: "XML syntax error on line 7: element <roots> closed by </root>",
 		},
 		{
 			description: "MissingContentType_ValidJSON",
@@ -203,7 +203,7 @@ age: 27
 is_married: true`,
 			contentType:    "",
 			expectedResult: result{},
-			expectedError:  "invalid JSON: invalid character 'a' in literal null (expecting 'u')",
+			expectedError:  "invalid character 'a' in literal null (expecting 'u')",
 		},
 	}
 
