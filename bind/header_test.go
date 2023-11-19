@@ -298,7 +298,11 @@ func TestHeader(t *testing.T) {
 
 			// Arrange
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
-			request.Header = test.header
+			for key, value := range test.header {
+				for _, v := range value {
+					request.Header.Add(key, v)
+				}
+			}
 
 			r := lit.NewRequest(request, nil)
 

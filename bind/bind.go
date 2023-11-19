@@ -4,6 +4,7 @@ package bind
 import (
 	"errors"
 	"fmt"
+	"net/textproto"
 	"reflect"
 	"strconv"
 	"time"
@@ -145,7 +146,13 @@ func bindFields[T string | []string](
 			continue
 		}
 
-		value, ok := values[parameter]
+		var value T
+
+		if fieldTag == headerTag {
+			value, ok = values[textproto.CanonicalMIMEHeaderKey(parameter)]
+		} else {
+			value, ok = values[parameter]
+		}
 
 		if !ok {
 			continue
