@@ -8,7 +8,7 @@ import (
 
 // Request is the input of a [Handler].
 type Request struct {
-	request    *http.Request
+	Request    *http.Request
 	parameters map[string]string
 }
 
@@ -37,35 +37,25 @@ func (r *Request) URIParameters() map[string]string {
 
 // URL of this request.
 func (r *Request) URL() *url.URL {
-	return r.request.URL
+	return r.Request.URL
 }
 
 // Method of this request.
 func (r *Request) Method() string {
-	return r.request.Method
+	return r.Request.Method
 }
 
 // Body of this request.
 func (r *Request) Body() io.ReadCloser {
-	return r.request.Body
-}
-
-// Form parses and returns the form data of this request, including the request's query parameters and the PATCH, POST
-// or PUT body data.
-func (r *Request) Form() (url.Values, error) {
-	if err := r.request.ParseForm(); err != nil {
-		return nil, err
-	}
-
-	return r.request.Form, nil
+	return r.Request.Body
 }
 
 // Header fields of this request.
 func (r *Request) Header() http.Header {
-	return r.request.Header
+	return r.Request.Header
 }
 
 // Base returns the underlying http.Request.
 func (r *Request) Base() *http.Request {
-	return r.request
+	return r.Request
 }

@@ -6,36 +6,39 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/jvcoutinho/lit"
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	jsonTag = "json"
-	yamlTag = "yaml"
-	xmlTag  = "xml"
-	formTag = "form"
-)
+const formTag = "form"
 
-// Body binds the request's body into a value of type T.
+// Body binds the request's body into the fields of a struct of type T.
 //
 // It checks the Content-Type header to select an appropriated parsing method:
 //   - "application/json" for JSON parsing
 //   - "application/xml" or "text/xml" for XML parsing
 //   - "application/x-yaml" for YAML parsing
-//   - "application/x-www-form-urlencoded" for form parsing (T must be a struct type in this case.
-//     Otherwise, Body panics)
+//   - "application/x-www-form-urlencoded" for form parsing
 //
 // Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately. For form parsing,
 // use the tag "form".
 //
 // If the Content-Type header is not set nor supported, Body defaults to JSON parsing.
+//
+// If T is not a struct type, Body panics.
 func Body[T any](r *lit.Request) (T, error) {
 	var (
 		target T
 		err    error
 	)
+
+	targetValue := reflect.ValueOf(&target).Elem()
+
+	if targetValue.Kind() != reflect.Struct {
+		panic(nonStructTypeParameter)
+	}
 
 	switch r.Header().Get("Content-Type") {
 	case "application/xml", "text/xml":
@@ -43,7 +46,7 @@ func Body[T any](r *lit.Request) (T, error) {
 	case "application/x-yaml", "text/yaml":
 		err = decodeYAML(r.Body(), &target)
 	case "application/x-www-form-urlencoded":
-		return parseForm[T](r)
+		return target, bindForm(r, targetValue)
 	default:
 		err = decodeJSON(r.Body(), &target)
 	}
@@ -55,15 +58,15 @@ func Body[T any](r *lit.Request) (T, error) {
 	return target, err
 }
 
-func parseForm[T any](r *lit.Request) (T, error) {
-	var target T
-
-	form, err := r.Form()
+func bindForm(r *lit.Request, targetValue reflect.Value) error {
+	err := r.Request.ParseForm()
 	if err != nil {
-		return target, err
+		return err
 	}
 
-	return bindStruct[T](form, formTag, bindAll)
+	fields := reflect.VisibleFields(targetValue.Type())
+
+	return bindFields(r.Request.Form, formTag, targetValue, fields, bindAll)
 }
 
 func decodeJSON(body io.ReadCloser, target any) error {

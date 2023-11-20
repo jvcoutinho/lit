@@ -23,7 +23,16 @@ func TestBody(t *testing.T) {
 		contentType    string
 		expectedResult any
 		expectedError  string
+		shouldPanic    bool
 	}{
+		{
+			description: "WhenTypeParameterIsNotStruct_ShouldPanic",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Body[int](r)
+			},
+			expectedError: "T must be a struct type",
+			shouldPanic:   true,
+		},
 		{
 			description: "WhenContentTypeIsJSON_AndItIsValid_ShouldBind",
 			body: `
@@ -282,21 +291,30 @@ array:
 			t.Parallel()
 
 			// Arrange
-			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
-			r.Header.Add("Content-Type", test.contentType)
+			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
+			request.Header.Add("Content-Type", test.contentType)
 
-			request := lit.NewRequest(r, nil)
+			r := lit.NewRequest(request, nil)
 
 			// Act
-			result, err := test.function(request)
+			// Act
+			if test.shouldPanic {
+				require.PanicsWithValue(t, test.expectedError, func() {
+					_, _ = test.function(r)
+				})
 
-			// Assert
-			if test.expectedError == "" {
-				require.NoError(t, err)
-			} else {
-				require.EqualError(t, err, test.expectedError)
+				return
 			}
 
+			result, err := test.function(r)
+
+			// Assert
+			errMessage := ""
+			if err != nil {
+				errMessage = err.Error()
+			}
+
+			require.Equal(t, test.expectedError, errMessage)
 			require.Equal(t, test.expectedResult, result)
 		})
 	}
