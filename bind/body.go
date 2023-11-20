@@ -14,6 +14,8 @@ import (
 
 const formTag = "form"
 
+var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
+
 // Body binds the request's body into the fields of a struct of type T.
 //
 // It checks the Content-Type header to select an appropriated parsing method:
@@ -25,7 +27,8 @@ const formTag = "form"
 // Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately. For form parsing,
 // use the tag "form".
 //
-// If the Content-Type header is not set nor supported, Body defaults to JSON parsing.
+// If the Content-Type header is not set, Body defaults to JSON parsing. If it is not supported, it returns
+// ErrUnsupportedContentType.
 //
 // If T is not a struct type, Body panics.
 func Body[T any](r *lit.Request) (T, error) {
@@ -40,15 +43,19 @@ func Body[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	switch r.Header().Get("Content-Type") {
+	contentType := r.Header().Get("Content-Type")
+
+	switch contentType {
 	case "application/xml", "text/xml":
 		err = decodeXML(r.Body(), &target)
 	case "application/x-yaml", "text/yaml":
 		err = decodeYAML(r.Body(), &target)
 	case "application/x-www-form-urlencoded":
 		return target, bindForm(r, targetValue)
-	default:
+	case "application/json", "":
 		err = decodeJSON(r.Body(), &target)
+	default:
+		return target, ErrUnsupportedContentType
 	}
 
 	if errors.Is(err, io.EOF) {

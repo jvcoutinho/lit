@@ -34,6 +34,15 @@ func TestBody(t *testing.T) {
 			shouldPanic:   true,
 		},
 		{
+			description: "WhenContentTypeIsUnsupported_ShouldReturnError",
+			contentType: "text/plain",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Body[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "unsupported Content-Type",
+		},
+		{
 			description: "WhenContentTypeIsJSON_AndItIsValid_ShouldBind",
 			body: `
 {
