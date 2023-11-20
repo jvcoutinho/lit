@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
@@ -15,195 +16,263 @@ import (
 func TestBody(t *testing.T) {
 	t.Parallel()
 
-	type result struct {
-		Name      string `json:"name" yaml:"name" xml:"Name"`
-		Age       int    `json:"age" yaml:"age" xml:"Age"`
-		IsMarried bool   `json:"is_married" yaml:"is_married" xml:"IsMarried"`
-	}
-
 	tests := []struct {
 		description    string
 		body           string
+		function       func(r *lit.Request) (any, error)
 		contentType    string
 		expectedResult any
 		expectedError  string
 	}{
 		{
-			description: "Valid JSON",
+			description: "WhenContentTypeIsJSON_AndItIsValid_ShouldBind",
 			body: `
-				{
-					"name": "John",
-					"age": 27,
-					"is_married": true
-				}
-			`,
-			contentType: "application/json",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+{
+    "string": "hi",
+	"pointer": 10,
+    "uint": 10,
+    "uint8": 10,
+    "uint16": 10,
+    "uint32": 10,
+    "uint64": 10,
+    "int": 10,
+    "int8": 10,
+    "int16": 10,
+    "int32": 10,
+    "int64": 10,
+    "float32": 10.5,
+    "float64": 10.5,
+    "bool": true,
+    "time": "2023-10-22T00:00:00Z",
+    "slice": [
+        2,
+        3
+    ],
+    "array": [
+        2,
+        3
+    ]
+}`,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "",
+			expectedResult: bindableFields{
+				String:  "hi",
+				Pointer: pointerOf(10),
+				Uint:    10,
+				Uint8:   10,
+				Uint16:  10,
+				Uint32:  10,
+				Uint64:  10,
+				Int:     10,
+				Int8:    10,
+				Int16:   10,
+				Int32:   10,
+				Int64:   10,
+				Float32: 10.5,
+				Float64: 10.5,
+				Bool:    true,
+				Time:    time.Date(2023, 10, 22, 0, 0, 0, 0, time.UTC),
+				Slice:   []int{2, 3},
+				Array:   [2]int{2, 3},
+			},
 		},
 		{
-			description: "Invalid JSON",
+			description: "WhenContentTypeIsJSON_AndItIsInvalid_ShouldReturnError",
 			body: `
-				{
-					"name": John",
-					"age": 27,
-					"is_married": true
-				}
-			`,
-			contentType:    "application/json",
-			expectedResult: result{},
-			expectedError:  "invalid character 'J' looking for beginning of value",
+{
+    "uint": "10a"
+}`,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "uint: string is not a valid uint",
 		},
 		{
-			description: "Valid YAML 1",
+			description: "WhenBodyIsEmpty_ShouldReturnDefaultValue",
+			body:        "",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+		},
+		{
+			description: "WhenContentTypeIsYAML_AndItIsValid_ShouldBind",
 			body: `
-name: John
-age: 27
-is_married: true`,
+string: hi
+pointer: 10
+uint: 10
+uint8: 10
+uint16: 10
+uint32: 10
+uint64: 10
+int: 10
+int8: 10
+int16: 10
+int32: 10
+int64: 10
+float32: 10.5
+float64: 10.5
+bool: true
+time: '2023-10-22T00:00:00Z'
+slice:
+- 2
+- 3
+array:
+- 2
+- 3
+`,
 			contentType: "application/x-yaml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "",
-		},
-		{
-			description: "Valid YAML 2",
-			body: `
-name: John
-age: 27
-is_married: true`,
-			contentType: "text/yaml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			expectedResult: bindableFields{
+				String:  "hi",
+				Pointer: pointerOf(10),
+				Uint:    10,
+				Uint8:   10,
+				Uint16:  10,
+				Uint32:  10,
+				Uint64:  10,
+				Int:     10,
+				Int8:    10,
+				Int16:   10,
+				Int32:   10,
+				Int64:   10,
+				Float32: 10.5,
+				Float64: 10.5,
+				Bool:    true,
+				Time:    time.Date(2023, 10, 22, 0, 0, 0, 0, time.UTC),
+				Slice:   []int{2, 3},
+				Array:   [2]int{2, 3},
 			},
-			expectedError: "",
 		},
 		{
-			description: "Invalid YAML 1",
-			body: `
-name: John
- age: 27
-is_married: true`,
-			contentType:    "application/x-yaml",
-			expectedResult: result{},
-			expectedError:  "yaml: line 3: mapping values are not allowed in this context",
+			description: "WhenContentTypeIsYAML_AndItIsInvalid_ShouldReturnError",
+			body:        `uint: 10a`,
+			contentType: "application/x-yaml",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `10a` into uint",
 		},
 		{
-			description: "Invalid YAML 2",
-			body: `
-name: John
- age: 27
-is_married: true`,
-			contentType:    "text/yaml",
-			expectedResult: result{},
-			expectedError:  "yaml: line 3: mapping values are not allowed in this context",
-		},
-		{
-			description: "Valid XML 1",
+			description: "WhenContentTypeIsXML_AndItIsValid_ShouldBind",
 			body: `
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
-  <Name>John</Name>
-  <Age>27</Age>
-  <IsMarried>true</IsMarried>
+  <String>hi</String>
+  <Pointer>10</Pointer>
+  <Uint>10</Uint>
+  <Uint8>10</Uint8>
+  <Uint16>10</Uint16>
+  <Uint32>10</Uint32>
+  <Uint64>10</Uint64>
+  <Int>10</Int>
+  <Int8>10</Int8>
+  <Int16>10</Int16>
+  <Int32>10</Int32>
+  <Int64>10</Int64>
+  <Float32>10.5</Float32>
+  <Float64>10.5</Float64>
+  <Bool>true</Bool>
+  <Time>2023-10-22T00:00:00Z</Time>
+  <Slice>2</Slice>
+  <Slice>3</Slice>
 </root>
-			`,
+`,
 			contentType: "application/xml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "",
+			expectedResult: bindableFields{
+				String:  "hi",
+				Pointer: pointerOf(10),
+				Uint:    10,
+				Uint8:   10,
+				Uint16:  10,
+				Uint32:  10,
+				Uint64:  10,
+				Int:     10,
+				Int8:    10,
+				Int16:   10,
+				Int32:   10,
+				Int64:   10,
+				Float32: 10.5,
+				Float64: 10.5,
+				Bool:    true,
+				Time:    time.Date(2023, 10, 22, 0, 0, 0, 0, time.UTC),
+				Slice:   []int{2, 3},
+			},
 		},
 		{
-			description: "Valid XML 2",
+			description: "WhenContentTypeIsXML_AndItIsInvalid_ShouldReturnError",
 			body: `
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
-  <Name>John</Name>
-  <Age>27</Age>
-  <IsMarried>true</IsMarried>
+  <Uint>10a</Uint>
 </root>
-			`,
-			contentType: "text/xml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
-			},
-			expectedError: "",
-		},
-		{
-			description: "Invalid XML 1",
-			body: `
-<?xml version="1.0" encoding="UTF-8" ?>
-<roots>
-  <Name>John</Name>
-  <Age>27</Age>
-  <IsMarried>true</IsMarried>
-</root>
-			`,
+`,
 			contentType: "application/xml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "XML syntax error on line 7: element <roots> closed by </root>",
+			expectedResult: bindableFields{},
+			expectedError:  `strconv.ParseUint: parsing "10a": invalid syntax`,
 		},
 		{
-			description: "Invalid XML 2",
-			body: `
-<?xml version="1.0" encoding="UTF-8" ?>
-<roots>
-  <Name>John</Name>
-  <Age>27</Age>
-  <IsMarried>true</IsMarried>
-</root>
-			`,
-			contentType: "text/xml",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			description: "WhenContentTypeIsForm_AndItIsValid_ShouldBind",
+			body: "string=hi&pointer=10&uint=10&uint8=10&uint16=10&uint32=10&uint64=10&int=10&int8=10&int16=10" +
+				"&int32=10&int64=10&float32=10.5&float64=10.5&complex64=10.5&complex128=10.5&bool=true" +
+				"&time=2023-10-22T00:00:00Z&slice=2&slice=3&array=2&array=3",
+			contentType: "application/x-www-form-urlencoded",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "XML syntax error on line 7: element <roots> closed by </root>",
+			expectedResult: bindableFields{
+				String:     "hi",
+				Pointer:    pointerOf(10),
+				Uint:       10,
+				Uint8:      10,
+				Uint16:     10,
+				Uint32:     10,
+				Uint64:     10,
+				Int:        10,
+				Int8:       10,
+				Int16:      10,
+				Int32:      10,
+				Int64:      10,
+				Float32:    10.5,
+				Float64:    10.5,
+				Complex64:  10.5,
+				Complex128: 10.5,
+				Bool:       true,
+				Time:       time.Date(2023, 10, 22, 0, 0, 0, 0, time.UTC),
+				Slice:      []int{2, 3},
+				Array:      [2]int{2, 3},
+			},
 		},
 		{
-			description: "MissingContentType_ValidJSON",
-			body: `
-				{
-					"name": "John",
-					"age": 27,
-					"is_married": true
-				}
-			`,
-			contentType: "",
-			expectedResult: result{
-				Name:      "John",
-				Age:       27,
-				IsMarried: true,
+			description: "WhenContentTypeIsForm_AndItIsInvalid_ShouldReturnError",
+			body:        "uint=10a",
+			contentType: "application/x-www-form-urlencoded",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
 			},
-			expectedError: "",
+			expectedResult: bindableFields{},
+			expectedError:  "uint: 10a is not a valid uint: invalid syntax",
 		},
 		{
-			description: "MissingContentType_InvalidJSON",
-			body: `
-name: John
-age: 27
-is_married: true`,
-			contentType:    "",
-			expectedResult: result{},
-			expectedError:  "invalid character 'a' in literal null (expecting 'u')",
+			description: "WhenContentTypeIsForm_AndItIsMalformed_ShouldReturnError",
+			body:        "&key;&",
+			contentType: "application/x-www-form-urlencoded",
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{},
+			expectedError:  "invalid semicolon separator in query",
 		},
 	}
 
@@ -213,13 +282,13 @@ is_married: true`,
 			t.Parallel()
 
 			// Arrange
-			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte(test.body)))
+			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
 			r.Header.Add("Content-Type", test.contentType)
 
 			request := lit.NewRequest(r, nil)
 
 			// Act
-			result, err := bind.Body[result](request)
+			result, err := test.function(request)
 
 			// Assert
 			if test.expectedError == "" {

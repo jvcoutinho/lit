@@ -333,6 +333,18 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{Uint: 10},
 		},
+		{
+			description: "WhenContentTypeIsForm_AndRequestIsPOST_ShouldParseFormBodyAndQueryParameters",
+			query:       url.Values{"uint8": {"10"}},
+			body:        "uint=10",
+			header: http.Header{
+				"Content-Type": {"application/x-www-form-urlencoded"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{Uint: 10, Uint8: 10},
+		},
 	}
 
 	for _, test := range tests {
@@ -341,7 +353,7 @@ func TestRequest(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			request := httptest.NewRequest(http.MethodGet, "/", bytes.NewBufferString(test.body))
+			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
 			request.URL.RawQuery = test.query.Encode()
 			for key, value := range test.header {
 				for _, v := range value {

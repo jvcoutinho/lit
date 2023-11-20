@@ -53,7 +53,7 @@ func bind(value string, target reflect.Value) error {
 		target.SetString(value)
 		return nil
 	case reflect.Pointer:
-		return bindPointer(value, target)
+		return bindPointer(value, target, bind)
 	case reflect.Uint:
 		return bindUint(0, value, target)
 	case reflect.Uint8:
@@ -95,19 +95,10 @@ func bind(value string, target reflect.Value) error {
 	}
 }
 
-func bindPointer(value string, target reflect.Value) error {
-	targetValue := reflect.New(target.Type().Elem())
-	if err := bind(value, targetValue.Elem()); err != nil {
-		return err
-	}
-
-	target.Set(targetValue)
-
-	return nil
-}
-
 func bindAll(values []string, target reflect.Value) error {
 	switch target.Kind() {
+	case reflect.Pointer:
+		return bindPointer(values, target, bindAll)
 	case reflect.Slice:
 		return bindSlice(values, target)
 	case reflect.Array:
@@ -175,6 +166,17 @@ func bindFields[T string | []string](
 			return fmt.Errorf("%s: %w", parameter, err)
 		}
 	}
+
+	return nil
+}
+
+func bindPointer[T string | []string](value T, target reflect.Value, fn func(T, reflect.Value) error) error {
+	targetValue := reflect.New(target.Type().Elem())
+	if err := fn(value, targetValue.Elem()); err != nil {
+		return err
+	}
+
+	target.Set(targetValue)
 
 	return nil
 }

@@ -34,11 +34,10 @@ func Request[T any](r *lit.Request) (T, error) {
 		uriParameters, uriParametersFields = r.URIParameters(), fieldsPerTag[uriParameterTag]
 		query, queryFields                 = r.URL().Query(), fieldsPerTag[queryParameterTag]
 		header, headerFields               = r.Header(), fieldsPerTag[headerTag]
-		body, hasBodyFields                = r.Body(),
-			len(fieldsPerTag[jsonTag]) > 0 || len(fieldsPerTag[yamlTag]) > 0 || len(fieldsPerTag[xmlTag]) > 0
+		body                               = r.Body()
 	)
 
-	if body != http.NoBody && hasBodyFields {
+	if body != http.NoBody {
 		if target, err = Body[T](r); err != nil {
 			return target, err
 		}
@@ -72,7 +71,7 @@ func getFieldsPerTag(structValue reflect.Value) map[string][]reflect.StructField
 
 	for _, field := range fields {
 		appendIfContainsTags(fieldsPerTag, field,
-			uriParameterTag, queryParameterTag, headerTag, jsonTag, yamlTag, xmlTag)
+			uriParameterTag, queryParameterTag, headerTag)
 	}
 
 	return fieldsPerTag
