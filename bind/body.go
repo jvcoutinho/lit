@@ -12,7 +12,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const formTag = "form"
+const (
+	formTag = "form"
+	jsonTag = "json"
+	xmlTag  = "xml"
+	yamlTag = "yaml"
+)
 
 var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 
@@ -34,6 +39,7 @@ var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 func Body[T any](r *lit.Request) (T, error) {
 	var (
 		target T
+		tag    string
 		err    error
 	)
 
@@ -47,12 +53,16 @@ func Body[T any](r *lit.Request) (T, error) {
 
 	switch contentType {
 	case "application/xml", "text/xml":
+		tag = xmlTag
 		err = decodeXML(r.Body(), &target)
 	case "application/x-yaml", "text/yaml":
+		tag = yamlTag
 		err = decodeYAML(r.Body(), &target)
 	case "application/x-www-form-urlencoded":
-		return target, bindForm(r, targetValue)
+		tag = formTag
+		err = bindForm(r, targetValue)
 	case "application/json", "":
+		tag = jsonTag
 		err = decodeJSON(r.Body(), &target)
 	default:
 		return target, ErrUnsupportedContentType
@@ -62,7 +72,15 @@ func Body[T any](r *lit.Request) (T, error) {
 		return target, nil
 	}
 
-	return target, err
+	if err != nil {
+		return target, err
+	}
+
+	if err := validateFields(target, tag); err != nil {
+		return target, err
+	}
+
+	return target, nil
 }
 
 func bindForm(r *lit.Request, targetValue reflect.Value) error {
