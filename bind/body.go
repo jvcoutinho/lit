@@ -76,7 +76,7 @@ func Body[T any](r *lit.Request) (T, error) {
 		return target, err
 	}
 
-	if err := validateFields(target, tag); err != nil {
+	if err := validateFields(&target, targetValue, reflect.VisibleFields(targetValue.Type()), tag); err != nil {
 		return target, err
 	}
 

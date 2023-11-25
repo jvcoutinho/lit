@@ -127,7 +127,15 @@ func bindStruct[T any, V string | []string](
 
 	fields := reflect.VisibleFields(targetValue.Type())
 
-	return target, bindFields(values, tag, targetValue, fields, bindFunction)
+	if err := bindFields(values, tag, targetValue, fields, bindFunction); err != nil {
+		return target, err
+	}
+
+	if err := validateFields(&target, targetValue, fields, tag); err != nil {
+		return target, err
+	}
+
+	return target, nil
 }
 
 func bindFields[T string | []string](

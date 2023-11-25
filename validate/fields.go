@@ -1,9 +1,7 @@
-package bind
+package validate
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit/validate"
-	"log"
 	"reflect"
 	"slices"
 	"strings"
@@ -21,30 +19,24 @@ func (e notFieldPointerError) Error() string {
 		e.structValue.Type().String())
 }
 
-func validateFields[T any](target *T, targetValue reflect.Value, fields []reflect.StructField, tag string) error {
-	validatable, ok := any(target).(validate.Validatable)
-	if !ok { // we want pointer receiver to implement the interface
-		return nil
-	}
-
-	_, ok = any(*target).(validate.Validatable)
-	if ok { // but we don't want value receiver to implement the interface
-		log.Printf("%T: the receiver of Validate() should be a pointer in order to use "+
-			"validation from bind functions", *target)
-		return nil
-	}
-
-	var (
-		validations = validatable.Validate()
-		violations  = slices.DeleteFunc(validations, func(f validate.Field) bool { return f.Valid })
-	)
+// Fields validate the fields of a struct of type T.
+//
+// It uses the fields' tag values to display a message for the user in case the validation fails (by
+// using binding functions along Validatable, this can be inferred automatically).
+// Then, if tag is empty or is missing in the field, it uses the field's name instead.
+//
+// If T is not a struct type, Fields panics.
+func Fields[T any](target *T, tag string, validations ...Field) error {
+	violations := slices.DeleteFunc(validations, func(f Field) bool { return f.Valid })
 
 	if len(violations) == 0 {
 		return nil
 	}
 
 	var (
-		fieldsPerAddress  = getFieldsPerAddress(fields, targetValue)
+		structValue       = reflect.ValueOf(target).Elem()
+		fields            = reflect.VisibleFields(structValue.Type())
+		fieldsPerAddress  = getFieldsPerAddress(fields, structValue)
 		argumentAddresses = make(map[any]unsafe.Pointer)
 	)
 
@@ -52,12 +44,12 @@ func validateFields[T any](target *T, targetValue reflect.Value, fields []reflec
 		for ai, argument := range validation.Targets {
 			argumentAddress, ok := getArgumentAddress(argumentAddresses, argument)
 			if !ok {
-				panic(notFieldPointerError{targetValue, vi, ai})
+				panic(notFieldPointerError{structValue, vi, ai})
 			}
 
 			field, ok := fieldsPerAddress[argumentAddress]
 			if !ok {
-				panic(notFieldPointerError{targetValue, vi, ai})
+				panic(notFieldPointerError{structValue, vi, ai})
 			}
 
 			violations[vi].Message = strings.ReplaceAll(validation.Message,
@@ -65,7 +57,7 @@ func validateFields[T any](target *T, targetValue reflect.Value, fields []reflec
 		}
 	}
 
-	return validate.Error{Violations: violations}
+	return Error{Violations: violations}
 }
 
 func getReplacement(field reflect.StructField, tag string) string {
