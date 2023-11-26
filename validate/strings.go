@@ -13,3 +13,12 @@ func HasPrefix(target *string, prefix string) Field {
 		Fields:  []any{target},
 	}
 }
+
+// HasSuffix validates if target ends with suffix.
+func HasSuffix(target *string, suffix string) Field {
+	return Field{
+		Valid:   target == nil || strings.HasSuffix(*target, suffix),
+		Message: fmt.Sprintf(`{0} should end with "%s"`, suffix),
+		Fields:  []any{target},
+	}
+}
