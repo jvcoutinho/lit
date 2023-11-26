@@ -8,7 +8,10 @@ import (
 	"unsafe"
 )
 
-const validateTag = "validate"
+const (
+	validateTag            = "validate"
+	nonStructTypeParameter = "T must be a struct type"
+)
 
 type notFieldPointerError struct {
 	structValue reflect.Value
@@ -33,8 +36,13 @@ func Fields[T any](target *T, validations ...Field) error {
 		return nil
 	}
 
+	structValue := reflect.ValueOf(target).Elem()
+
+	if structValue.Kind() != reflect.Struct {
+		panic(nonStructTypeParameter)
+	}
+
 	var (
-		structValue       = reflect.ValueOf(target).Elem()
 		fields            = reflect.VisibleFields(structValue.Type())
 		fieldsPerAddress  = getFieldsPerAddress(fields, structValue)
 		argumentAddresses = make(map[any]unsafe.Pointer)
@@ -44,12 +52,12 @@ func Fields[T any](target *T, validations ...Field) error {
 		for ai, argument := range validation.Fields {
 			argumentAddress, ok := getArgumentAddress(argumentAddresses, argument)
 			if !ok {
-				panic(notFieldPointerError{structValue, ai})
+				panic(notFieldPointerError{structValue, ai}.Error())
 			}
 
 			field, ok := fieldsPerAddress[argumentAddress]
 			if !ok {
-				panic(notFieldPointerError{structValue, ai})
+				panic(notFieldPointerError{structValue, ai}.Error())
 			}
 
 			violations[vi].Message = strings.ReplaceAll(validation.Message,

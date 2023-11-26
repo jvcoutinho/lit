@@ -21,7 +21,7 @@ func (e Error) Error() string {
 		msg.WriteString(violation.Message)
 
 		if i < len(e.Violations)-1 {
-			msg.WriteString(", ")
+			msg.WriteString("; ")
 		}
 	}
 
