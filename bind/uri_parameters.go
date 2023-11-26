@@ -9,7 +9,7 @@ const uriParameterTag = "uri"
 // URIParameters binds the request's URI parameters into the fields of a struct of type T.
 // Targeted fields should be exported and annotated with the tag "uri". Otherwise, they are ignored.
 //
-// If a field can't be bound, URIParameters returns BindingError.
+// If a field can't be bound, URIParameters returns Error.
 //
 // If T is not a struct type, URIParameters panics.
 func URIParameters[T any](r *lit.Request) (T, error) {

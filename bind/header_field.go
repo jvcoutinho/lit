@@ -14,7 +14,7 @@ import (
 //
 // HeaderField consider header as case-insensitive.
 //
-// If the value can't be bound into T, HeaderField returns BindingError.
+// If the value can't be bound into T, HeaderField returns Error.
 func HeaderField[T primitiveType | time.Time](r *lit.Request, header string) (T, error) {
 	var (
 		target      T

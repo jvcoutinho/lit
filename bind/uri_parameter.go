@@ -2,16 +2,17 @@ package bind
 
 import (
 	"fmt"
-	"github.com/jvcoutinho/lit"
-	"golang.org/x/exp/maps"
 	"reflect"
 	"time"
+
+	"github.com/jvcoutinho/lit"
+	"golang.org/x/exp/maps"
 )
 
 // URIParameter binds a request's URI parameter into a value of type T. T can be either a
 // primitive type or a [time.Time].
 //
-// If the value can't be bound into T, URIParameter returns BindingError.
+// If the value can't be bound into T, URIParameter returns Error.
 //
 // If parameter is not registered as one of the request's expected parameters, URIParameter panics.
 func URIParameter[T primitiveType | time.Time](r *lit.Request, parameter string) (T, error) {

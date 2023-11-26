@@ -29,8 +29,8 @@ func (e invalidArrayLengthError) Error() string {
 	return fmt.Sprintf("expected at most %d elements. Got %d", e.ExpectedLength, e.ActualLength)
 }
 
-// BindingError is returned when a binding to a target value fails.
-type BindingError struct {
+// Error is returned when a binding to a target value fails.
+type Error struct {
 	// Incoming value.
 	Value string
 	// Target of the binding.
@@ -39,7 +39,7 @@ type BindingError struct {
 	Err error
 }
 
-func (e BindingError) Error() string {
+func (e Error) Error() string {
 	if e.Err == nil {
 		return fmt.Sprintf("%s is not a valid %s", e.Value, e.Target)
 	}
@@ -108,7 +108,7 @@ func bindAll(values []string, target reflect.Value) error {
 			return bind(values[0], target)
 		}
 
-		return BindingError{fmt.Sprint(values), target.Type(), nil}
+		return Error{fmt.Sprint(values), target.Type(), nil}
 	}
 }
 
@@ -192,7 +192,7 @@ func bindPointer[T string | []string](value T, target reflect.Value, fn func(T, 
 func bindUint(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseUint(value, 10, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return Error{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetUint(converted)
@@ -203,7 +203,7 @@ func bindUint(bitSize int, value string, target reflect.Value) error {
 func bindInt(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseInt(value, 10, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return Error{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetInt(converted)
@@ -214,7 +214,7 @@ func bindInt(bitSize int, value string, target reflect.Value) error {
 func bindFloat(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseFloat(value, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return Error{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetFloat(converted)
@@ -225,7 +225,7 @@ func bindFloat(bitSize int, value string, target reflect.Value) error {
 func bindComplex(bitSize int, value string, target reflect.Value) error {
 	converted, err := strconv.ParseComplex(value, bitSize)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return Error{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetComplex(converted)
@@ -236,7 +236,7 @@ func bindComplex(bitSize int, value string, target reflect.Value) error {
 func bindBool(value string, target reflect.Value) error {
 	converted, err := strconv.ParseBool(value)
 	if err != nil {
-		return BindingError{value, target.Type(), errors.Unwrap(err)}
+		return Error{value, target.Type(), errors.Unwrap(err)}
 	}
 
 	target.SetBool(converted)
@@ -247,7 +247,7 @@ func bindBool(value string, target reflect.Value) error {
 func bindTime(value string, target reflect.Value) error {
 	converted, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		return BindingError{value, target.Type(), err}
+		return Error{value, target.Type(), err}
 	}
 
 	target.Set(reflect.ValueOf(converted))
@@ -257,7 +257,7 @@ func bindTime(value string, target reflect.Value) error {
 
 func bindArray(values []string, target reflect.Value) error {
 	if target.Len() < len(values) {
-		return BindingError{fmt.Sprint(values), target.Type(),
+		return Error{fmt.Sprint(values), target.Type(),
 			invalidArrayLengthError{target.Len(), len(values)}}
 	}
 

@@ -93,7 +93,7 @@ func decodeJSON(body io.ReadCloser, target any) error {
 	var unmarshalTypeError *json.UnmarshalTypeError
 	if errors.As(err, &unmarshalTypeError) {
 		return fmt.Errorf("%s: %w", unmarshalTypeError.Field,
-			BindingError{unmarshalTypeError.Value, unmarshalTypeError.Type, nil},
+			Error{unmarshalTypeError.Value, unmarshalTypeError.Type, nil},
 		)
 	}
 

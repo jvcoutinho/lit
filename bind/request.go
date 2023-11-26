@@ -13,7 +13,7 @@ import (
 // It's an optimized combination of the binding functions [Body], [Query], [Header] and [URIParameters], suitable
 // when you need to read from multiple inputs of the request.
 //
-// If a field can't be bound, Request returns BindingError.
+// If a field can't be bound, Request returns Error.
 //
 // If T is not a struct type, Request panics.
 func Request[T any](r *lit.Request) (T, error) {
