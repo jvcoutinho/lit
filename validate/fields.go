@@ -23,10 +23,10 @@ func (e notFieldPointerError) Error() string {
 		e.structValue.Type().String())
 }
 
-// Fields validate the fields of a struct of type T.
+// Fields validates the fields of a struct of type T.
 //
 // It uses the "validate" tag from the fields to build a message for the user in case the validation fails.
-// Then, if the tag is the empty string or is missing in a field, it uses the field's name instead.
+// If the tag is set as the empty string or is missing in a field, it uses the field's name instead.
 //
 // If T is not a struct type, Fields panics.
 func Fields[T any](target *T, validations ...Field) error {

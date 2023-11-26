@@ -14,3 +14,12 @@ func Greater[T constraints.Ordered](target *T, value T) Field {
 		Fields:  []any{target},
 	}
 }
+
+// Less validates if target is less than value.
+func Less[T constraints.Ordered](target *T, value T) Field {
+	return Field{
+		Valid:   target == nil || *target < value,
+		Message: fmt.Sprintf("{0} should be less than %v", value),
+		Fields:  []any{target},
+	}
+}

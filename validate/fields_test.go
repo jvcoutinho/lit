@@ -1,8 +1,15 @@
 package validate_test
 
 import (
+	"bytes"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
 
 	"github.com/jvcoutinho/lit/validate"
 
@@ -184,4 +191,32 @@ func TestFields(t *testing.T) {
 			require.Equal(t, test.expectedError, errMessage)
 		})
 	}
+}
+
+func ExampleFields() {
+	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBufferString(`
+		{"name": "Percy Jackson", "publishYear": 2007}
+	`))
+
+	r := lit.NewRequest(req, nil)
+
+	type RequestBody struct {
+		Name        string `json:"name" validate:"name"`
+		PublishYear int    `json:"publishYear" validate:"publishYear"`
+	}
+
+	body, _ := bind.Body[RequestBody](r)
+
+	err := validate.Fields(&body,
+		validate.Greater(&body.PublishYear, 2009),
+		validate.Less(&body.PublishYear, 2020),
+		validate.HasPrefix(&body.Name, "A"),
+	)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// publishYear should be greater than 2009; name should start with "A"
 }
