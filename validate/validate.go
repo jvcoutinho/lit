@@ -34,10 +34,10 @@ type Field struct {
 	Valid bool
 
 	// A user-friendly message that can be displayed if the validation fails. In this case,
-	// "{i}" placeholders, where i is the index of the replacement in Targets, are replaced by the field's tag values.
+	// "{i}" placeholders, where i is the index of the replacement in Fields, are replaced by the field's tag values.
 	Message string
 
 	// Pointers to the fields involved in this validation. It is a slice because the validation
 	// can have multiple fields as arguments.
-	Targets []any
+	Fields []any
 }

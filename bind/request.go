@@ -17,10 +17,7 @@ import (
 //
 // If T is not a struct type, Request panics.
 func Request[T any](r *lit.Request) (T, error) {
-	var (
-		target T
-		err    error
-	)
+	var target T
 
 	targetValue := reflect.ValueOf(&target).Elem()
 
@@ -28,7 +25,10 @@ func Request[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	fieldsPerTag := getFieldsPerTag(targetValue)
+	var (
+		fields       = reflect.VisibleFields(targetValue.Type())
+		fieldsPerTag = getFieldsPerTag(fields)
+	)
 
 	var (
 		uriParameters, uriParametersFields = r.URIParameters(), fieldsPerTag[uriParameterTag]
@@ -38,49 +38,47 @@ func Request[T any](r *lit.Request) (T, error) {
 	)
 
 	if body != http.NoBody {
-		if target, err = Body[T](r); err != nil {
+		if err := bindBody(r, &target, targetValue); err != nil {
 			return target, err
 		}
 	}
 
 	if len(uriParameters) > 0 && len(uriParametersFields) > 0 {
-		if err = bindFields(r.URIParameters(), uriParameterTag, targetValue, uriParametersFields, bind); err != nil {
+		if err := bindFields(r.URIParameters(), uriParameterTag, targetValue, uriParametersFields, bind); err != nil {
 			return target, err
 		}
 	}
 
 	if len(query) > 0 && len(queryFields) > 0 {
-		if err = bindFields(r.URL().Query(), queryParameterTag, targetValue, queryFields, bindAll); err != nil {
+		if err := bindFields(r.URL().Query(), queryParameterTag, targetValue, queryFields, bindAll); err != nil {
 			return target, err
 		}
 	}
 
 	if len(header) > 0 && len(headerFields) > 0 {
-		if err = bindFields(r.Header(), headerTag, targetValue, headerFields, bindAll); err != nil {
+		if err := bindFields(r.Header(), headerTag, targetValue, headerFields, bindAll); err != nil {
 			return target, err
 		}
+	}
+
+	if err := validateFields(&target); err != nil {
+		return target, err
 	}
 
 	return target, nil
 }
 
-func getFieldsPerTag(structValue reflect.Value) map[string][]reflect.StructField {
+func getFieldsPerTag(fields []reflect.StructField) map[string][]reflect.StructField {
 	fieldsPerTag := map[string][]reflect.StructField{}
-
-	fields := reflect.VisibleFields(structValue.Type())
+	tags := []string{uriParameterTag, queryParameterTag, headerTag}
 
 	for _, field := range fields {
-		appendIfContainsTags(fieldsPerTag, field,
-			uriParameterTag, queryParameterTag, headerTag)
+		for _, tag := range tags {
+			if _, ok := field.Tag.Lookup(tag); ok {
+				fieldsPerTag[tag] = append(fieldsPerTag[tag], field)
+			}
+		}
 	}
 
 	return fieldsPerTag
-}
-
-func appendIfContainsTags(fieldsPerTag map[string][]reflect.StructField, field reflect.StructField, tags ...string) {
-	for _, tag := range tags {
-		if _, ok := field.Tag.Lookup(tag); ok {
-			fieldsPerTag[tag] = append(fieldsPerTag[tag], field)
-		}
-	}
 }

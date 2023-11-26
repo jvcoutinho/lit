@@ -131,7 +131,7 @@ func bindStruct[T any, V string | []string](
 		return target, err
 	}
 
-	if err := validateFields(&target, targetValue, fields, tag); err != nil {
+	if err := validateFields(&target); err != nil {
 		return target, err
 	}
 

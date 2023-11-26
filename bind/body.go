@@ -14,9 +14,6 @@ import (
 
 const (
 	formTag = "form"
-	jsonTag = "json"
-	xmlTag  = "xml"
-	yamlTag = "yaml"
 )
 
 var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
@@ -37,11 +34,7 @@ var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 //
 // If T is not a struct type, Body panics.
 func Body[T any](r *lit.Request) (T, error) {
-	var (
-		target T
-		tag    string
-		err    error
-	)
+	var target T
 
 	targetValue := reflect.ValueOf(&target).Elem()
 
@@ -49,38 +42,38 @@ func Body[T any](r *lit.Request) (T, error) {
 		panic(nonStructTypeParameter)
 	}
 
-	contentType := r.Header().Get("Content-Type")
-
-	switch contentType {
-	case "application/xml", "text/xml":
-		tag = xmlTag
-		err = decodeXML(r.Body(), &target)
-	case "application/x-yaml", "text/yaml":
-		tag = yamlTag
-		err = decodeYAML(r.Body(), &target)
-	case "application/x-www-form-urlencoded":
-		tag = formTag
-		err = bindForm(r, targetValue)
-	case "application/json", "":
-		tag = jsonTag
-		err = decodeJSON(r.Body(), &target)
-	default:
-		return target, ErrUnsupportedContentType
-	}
-
-	if errors.Is(err, io.EOF) {
-		return target, nil
-	}
-
-	if err != nil {
+	if err := bindBody(r, &target, targetValue); err != nil {
 		return target, err
 	}
 
-	if err := validateFields(&target, targetValue, reflect.VisibleFields(targetValue.Type()), tag); err != nil {
+	if err := validateFields(&target); err != nil {
 		return target, err
 	}
 
 	return target, nil
+}
+
+func bindBody(r *lit.Request, target any, targetValue reflect.Value) error {
+	var err error
+
+	switch r.Header().Get("Content-Type") {
+	case "application/xml", "text/xml":
+		err = decodeXML(r.Body(), target)
+	case "application/x-yaml", "text/yaml":
+		err = decodeYAML(r.Body(), target)
+	case "application/x-www-form-urlencoded":
+		err = bindForm(r, targetValue)
+	case "application/json", "":
+		err = decodeJSON(r.Body(), target)
+	default:
+		return ErrUnsupportedContentType
+	}
+
+	if errors.Is(err, io.EOF) {
+		return nil
+	}
+
+	return err
 }
 
 func bindForm(r *lit.Request, targetValue reflect.Value) error {
