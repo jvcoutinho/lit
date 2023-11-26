@@ -3,6 +3,8 @@ package bind_test
 import (
 	"time"
 
+	"github.com/jvcoutinho/lit/validate"
+
 	"github.com/jvcoutinho/lit"
 )
 
@@ -37,6 +39,34 @@ type bindableFields struct {
 	Time       time.Time  `uri:"time" query:"time" header:"time" json:"time" form:"time"`
 	Slice      []int      `uri:"slice" query:"slice" header:"slice" json:"slice" form:"slice"`
 	Array      [2]int     `uri:"array" query:"array" header:"array" json:"array" form:"array"`
+}
+
+type nonPointerReceiverValidatableFields struct {
+	String string `uri:"string" query:"string" header:"string" json:"string" form:"string"`
+}
+
+func (f nonPointerReceiverValidatableFields) Validate() []validate.Field {
+	return []validate.Field{
+		{
+			Valid:   len(f.String) > 6,
+			Message: "{0} should have a length greater than 6",
+			Fields:  []any{&f.String},
+		},
+	}
+}
+
+type pointerReceiverValidatableFields struct {
+	String string `uri:"string" query:"string" header:"string" json:"string" form:"string"`
+}
+
+func (f *pointerReceiverValidatableFields) Validate() []validate.Field {
+	return []validate.Field{
+		{
+			Valid:   len(f.String) > 6,
+			Message: "{0} should have a length greater than 6",
+			Fields:  []any{&f.String},
+		},
+	}
 }
 
 func pointerOf[T any](value T) *T {

@@ -345,6 +345,23 @@ func TestRequest(t *testing.T) {
 			},
 			expectedResult: bindableFields{Uint: 10, Uint8: 10},
 		},
+		{
+			description:   "WhenTypeParameterIsValidatableWithValueReceiver_ShouldNotValidate",
+			uriParameters: map[string]string{"string": "string"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[nonPointerReceiverValidatableFields](r)
+			},
+			expectedResult: nonPointerReceiverValidatableFields{String: "string"},
+		},
+		{
+			description: "WhenTypeParameterIsValidatableWithPointerReceiver_ShouldValidate",
+			body:        `{"string": "string"}`,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[pointerReceiverValidatableFields](r)
+			},
+			expectedResult: pointerReceiverValidatableFields{String: "string"},
+			expectedError:  "String should have a length greater than 6",
+		},
 	}
 
 	for _, test := range tests {

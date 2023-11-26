@@ -292,6 +292,23 @@ array:
 			expectedResult: bindableFields{},
 			expectedError:  "invalid semicolon separator in query",
 		},
+		{
+			description: "WhenTypeParameterIsValidatableWithValueReceiver_ShouldNotValidate",
+			body:        `{"string": "string"}`,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Body[nonPointerReceiverValidatableFields](r)
+			},
+			expectedResult: nonPointerReceiverValidatableFields{String: "string"},
+		},
+		{
+			description: "WhenTypeParameterIsValidatableWithPointerReceiver_ShouldValidate",
+			body:        `{"string": "string"}`,
+			function: func(r *lit.Request) (any, error) {
+				return bind.Body[pointerReceiverValidatableFields](r)
+			},
+			expectedResult: pointerReceiverValidatableFields{String: "string"},
+			expectedError:  "String should have a length greater than 6",
+		},
 	}
 
 	for _, test := range tests {

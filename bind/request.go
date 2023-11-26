@@ -15,6 +15,9 @@ import (
 //
 // If a field can't be bound, Request returns Error.
 //
+// If *T implements validate.Validatable (with a pointer receiver), Request calls validate.Fields on the result
+// and can return validate.Error.
+//
 // If T is not a struct type, Request panics.
 func Request[T any](r *lit.Request) (T, error) {
 	var target T

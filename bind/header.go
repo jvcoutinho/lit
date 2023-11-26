@@ -12,6 +12,9 @@ const headerTag = "header"
 //
 // If any field couldn't be bound, Header returns Error.
 //
+// If *T implements validate.Validatable (with a pointer receiver), Header calls validate.Fields on the result
+// and can return validate.Error.
+//
 // If T is not a struct type, Header panics.
 func Header[T any](r *lit.Request) (T, error) {
 	return bindStruct[T](r.Header(), headerTag, bindAll)

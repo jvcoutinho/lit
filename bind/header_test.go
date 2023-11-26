@@ -300,6 +300,23 @@ func TestHeader(t *testing.T) {
 			expectedResult: bindableFields{},
 			expectedError:  "int: [10 20] is not a valid int",
 		},
+		{
+			description: "WhenTypeParameterIsValidatableWithValueReceiver_ShouldNotValidate",
+			header:      map[string][]string{"string": {"string"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[nonPointerReceiverValidatableFields](r)
+			},
+			expectedResult: nonPointerReceiverValidatableFields{String: "string"},
+		},
+		{
+			description: "WhenTypeParameterIsValidatableWithPointerReceiver_ShouldValidate",
+			header:      map[string][]string{"string": {"string"}},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Header[pointerReceiverValidatableFields](r)
+			},
+			expectedResult: pointerReceiverValidatableFields{String: "string"},
+			expectedError:  "String should have a length greater than 6",
+		},
 	}
 
 	for _, test := range tests {

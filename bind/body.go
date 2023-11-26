@@ -32,6 +32,9 @@ var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 // If the Content-Type header is not set, Body defaults to JSON parsing. If it is not supported, it returns
 // ErrUnsupportedContentType.
 //
+// If *T implements validate.Validatable (with a pointer receiver), Body calls validate.Fields on the result
+// and can return validate.Error.
+//
 // If T is not a struct type, Body panics.
 func Body[T any](r *lit.Request) (T, error) {
 	var target T

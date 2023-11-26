@@ -260,6 +260,23 @@ func TestURIParameters(t *testing.T) {
 			expectedError: `time: 10a is not a valid time.Time: parsing time "10a" as "2006-01-02T15:04:05Z07:00": ` +
 				`cannot parse "10a" as "2006"`,
 		},
+		{
+			description: "WhenTypeParameterIsValidatableWithValueReceiver_ShouldNotValidate",
+			parameters:  map[string]string{"string": "string"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[nonPointerReceiverValidatableFields](r)
+			},
+			expectedResult: nonPointerReceiverValidatableFields{String: "string"},
+		},
+		{
+			description: "WhenTypeParameterIsValidatableWithPointerReceiver_ShouldValidate",
+			parameters:  map[string]string{"string": "string"},
+			function: func(r *lit.Request) (any, error) {
+				return bind.URIParameters[pointerReceiverValidatableFields](r)
+			},
+			expectedResult: pointerReceiverValidatableFields{String: "string"},
+			expectedError:  "String should have a length greater than 6",
+		},
 	}
 
 	for _, test := range tests {
