@@ -80,8 +80,7 @@ func bindBody(r *lit.Request, target any, targetValue reflect.Value) error {
 }
 
 func bindForm(r *lit.Request, targetValue reflect.Value) error {
-	err := r.Request.ParseForm()
-	if err != nil {
+	if err := r.Request.ParseForm(); err != nil {
 		return err
 	}
 
@@ -90,7 +89,7 @@ func bindForm(r *lit.Request, targetValue reflect.Value) error {
 	return bindFields(r.Request.Form, formTag, targetValue, fields, bindAll)
 }
 
-func decodeJSON(body io.ReadCloser, target any) error {
+func decodeJSON(body io.Reader, target any) error {
 	err := json.NewDecoder(body).Decode(target)
 
 	var unmarshalTypeError *json.UnmarshalTypeError
@@ -103,10 +102,10 @@ func decodeJSON(body io.ReadCloser, target any) error {
 	return err
 }
 
-func decodeYAML(body io.ReadCloser, target any) error {
+func decodeYAML(body io.Reader, target any) error {
 	return yaml.NewDecoder(body).Decode(target)
 }
 
-func decodeXML(body io.ReadCloser, target any) error {
+func decodeXML(body io.Reader, target any) error {
 	return xml.NewDecoder(body).Decode(target)
 }

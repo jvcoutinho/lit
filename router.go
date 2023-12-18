@@ -2,8 +2,9 @@ package lit
 
 import (
 	"errors"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 var (
@@ -12,7 +13,7 @@ var (
 )
 
 // Handler handles requests.
-type Handler func(*Request) Response
+type Handler func(r *Request) Response
 
 func getArguments(params httprouter.Params) map[string]string {
 	arguments := make(map[string]string)

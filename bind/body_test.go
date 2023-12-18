@@ -323,7 +323,6 @@ array:
 			r := lit.NewRequest(request, nil)
 
 			// Act
-			// Act
 			if test.shouldPanic {
 				require.PanicsWithValue(t, test.expectedError, func() {
 					_, _ = test.function(r)

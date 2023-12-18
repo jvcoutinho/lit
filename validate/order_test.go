@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/jvcoutinho/lit/validate"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGreater(t *testing.T) {

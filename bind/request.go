@@ -1,7 +1,9 @@
 package bind
 
 import (
+	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 
 	"github.com/jvcoutinho/lit"
@@ -40,28 +42,20 @@ func Request[T any](r *lit.Request) (T, error) {
 		body                               = r.Body()
 	)
 
-	if body != http.NoBody {
-		if err := bindBody(r, &target, targetValue); err != nil {
-			return target, err
-		}
+	if err := bindRequestBody(r, body, &target, targetValue); err != nil {
+		return target, err
 	}
 
-	if len(uriParameters) > 0 && len(uriParametersFields) > 0 {
-		if err := bindFields(r.URIParameters(), uriParameterTag, targetValue, uriParametersFields, bind); err != nil {
-			return target, err
-		}
+	if err := bindRequestURIParameters(r, uriParameters, uriParametersFields, targetValue); err != nil {
+		return target, err
 	}
 
-	if len(query) > 0 && len(queryFields) > 0 {
-		if err := bindFields(r.URL().Query(), queryParameterTag, targetValue, queryFields, bindAll); err != nil {
-			return target, err
-		}
+	if err := bindRequestQuery(r, query, queryFields, targetValue); err != nil {
+		return target, err
 	}
 
-	if len(header) > 0 && len(headerFields) > 0 {
-		if err := bindFields(r.Header(), headerTag, targetValue, headerFields, bindAll); err != nil {
-			return target, err
-		}
+	if err := bindRequestHeader(r, header, headerFields, targetValue); err != nil {
+		return target, err
 	}
 
 	if err := validateFields(&target); err != nil {
@@ -69,6 +63,61 @@ func Request[T any](r *lit.Request) (T, error) {
 	}
 
 	return target, nil
+}
+
+func bindRequestHeader(
+	r *lit.Request,
+	header http.Header,
+	headerFields []reflect.StructField,
+	targetValue reflect.Value,
+) error {
+	if len(header) > 0 && len(headerFields) > 0 {
+		if err := bindFields(r.Header(), headerTag, targetValue, headerFields, bindAll); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func bindRequestQuery(
+	r *lit.Request,
+	query url.Values,
+	queryFields []reflect.StructField,
+	targetValue reflect.Value,
+) error {
+	if len(query) > 0 && len(queryFields) > 0 {
+		if err := bindFields(r.URL().Query(), queryParameterTag, targetValue, queryFields, bindAll); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func bindRequestURIParameters(
+	r *lit.Request,
+	uriParameters map[string]string,
+	uriParametersFields []reflect.StructField,
+	targetValue reflect.Value,
+) error {
+	if len(uriParameters) > 0 && len(uriParametersFields) > 0 {
+		if err := bindFields(r.URIParameters(), uriParameterTag, targetValue, uriParametersFields, bind); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func bindRequestBody(r *lit.Request, body io.ReadCloser, target any, targetValue reflect.Value) error {
+	if body != http.NoBody {
+		if err := bindBody(r, target, targetValue); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getFieldsPerTag(fields []reflect.StructField) map[string][]reflect.StructField {

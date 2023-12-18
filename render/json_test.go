@@ -2,11 +2,12 @@ package render_test
 
 import (
 	"errors"
-	"github.com/jvcoutinho/lit/render"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/jvcoutinho/lit/render"
+	"github.com/stretchr/testify/require"
 )
 
 func TestJSONResponse(t *testing.T) {

@@ -10,9 +10,7 @@ import (
 
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
-
 	"github.com/jvcoutinho/lit/validate"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -201,7 +199,7 @@ func ExampleFields() {
 	r := lit.NewRequest(req, nil)
 
 	type RequestBody struct {
-		Name        string `json:"name" validate:"name"`
+		Name        string `json:"name"        validate:"name"`
 		PublishYear int    `json:"publishYear" validate:"publishYear"`
 	}
 
@@ -212,7 +210,6 @@ func ExampleFields() {
 		validate.Less(&body.PublishYear, 2020),
 		validate.HasPrefix(&body.Name, "A"),
 	)
-
 	if err != nil {
 		fmt.Println(err)
 	}

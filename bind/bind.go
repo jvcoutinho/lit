@@ -16,7 +16,16 @@ type primitiveType interface {
 	constraints.Ordered | constraints.Complex | bool
 }
 
-const nonStructTypeParameter = "T must be a struct type"
+const (
+	nonStructTypeParameter = "T must be a struct type"
+
+	bitSize0   = 0
+	bitSize8   = 8
+	bitSize16  = 16
+	bitSize32  = 32
+	bitSize64  = 64
+	bitSize128 = 128
+)
 
 type invalidArrayLengthError struct {
 	// Maximum expected length for the array.
@@ -55,42 +64,40 @@ func bind(value string, target reflect.Value) error {
 	case reflect.Pointer:
 		return bindPointer(value, target, bind)
 	case reflect.Uint:
-		return bindUint(0, value, target)
+		return bindUint(bitSize0, value, target)
 	case reflect.Uint8:
-		return bindUint(8, value, target)
+		return bindUint(bitSize8, value, target)
 	case reflect.Uint16:
-		return bindUint(16, value, target)
+		return bindUint(bitSize16, value, target)
 	case reflect.Uint32:
-		return bindUint(32, value, target)
+		return bindUint(bitSize32, value, target)
 	case reflect.Uint64:
-		return bindUint(64, value, target)
+		return bindUint(bitSize64, value, target)
 	case reflect.Int:
-		return bindInt(0, value, target)
+		return bindInt(bitSize0, value, target)
 	case reflect.Int8:
-		return bindInt(8, value, target)
+		return bindInt(bitSize8, value, target)
 	case reflect.Int16:
-		return bindInt(16, value, target)
+		return bindInt(bitSize16, value, target)
 	case reflect.Int32:
-		return bindInt(32, value, target)
+		return bindInt(bitSize32, value, target)
 	case reflect.Int64:
-		return bindInt(64, value, target)
+		return bindInt(bitSize64, value, target)
 	case reflect.Float32:
-		return bindFloat(32, value, target)
+		return bindFloat(bitSize32, value, target)
 	case reflect.Float64:
-		return bindFloat(64, value, target)
+		return bindFloat(bitSize64, value, target)
 	case reflect.Complex64:
-		return bindComplex(64, value, target)
+		return bindComplex(bitSize64, value, target)
 	case reflect.Complex128:
-		return bindComplex(128, value, target)
+		return bindComplex(bitSize128, value, target)
 	case reflect.Bool:
 		return bindBool(value, target)
-	case reflect.Struct:
-		switch target.Interface().(type) {
-		case time.Time:
+	default:
+		if _, ok := target.Interface().(time.Time); ok {
 			return bindTime(value, target)
 		}
-		fallthrough
-	default:
+
 		panic(fmt.Sprintf("unbindable type %s", target.Type()))
 	}
 }
@@ -257,8 +264,10 @@ func bindTime(value string, target reflect.Value) error {
 
 func bindArray(values []string, target reflect.Value) error {
 	if target.Len() < len(values) {
-		return Error{fmt.Sprint(values), target.Type(),
-			invalidArrayLengthError{target.Len(), len(values)}}
+		return Error{
+			fmt.Sprint(values), target.Type(),
+			invalidArrayLengthError{target.Len(), len(values)},
+		}
 	}
 
 	for i, value := range values {
@@ -272,6 +281,7 @@ func bindArray(values []string, target reflect.Value) error {
 
 func bindSlice(values []string, target reflect.Value) error {
 	slice := reflect.MakeSlice(target.Type(), len(values), len(values))
+
 	err := bindArray(values, slice)
 	if err != nil {
 		return err

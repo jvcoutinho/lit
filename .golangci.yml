@@ -1,0 +1,42 @@
+linters:
+  enable-all: true
+  disable:
+    - ireturn
+    - wrapcheck
+    - exhaustive
+    - depguard
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - wrapcheck
+        - varnamelen
+        - exhaustruct
+        - exhaustivestruct
+        - funlen
+        - tagliatelle
+        - maintidx
+        - dupl
+        - goerr113
+        - goconst
+        - structcheck
+        - unused
+        - maligned
+    - source: bind
+      linters:
+        - cyclop
+
+linters-settings:
+  varnamelen:
+    max-distance: 15
+    min-name-length: 1
+  nlreturn:
+    block-size: 3
+  maligned:
+    suggest-new: true
+
+run:
+  modules-download-mode: readonly
+  skip-files:
+    - main\.go

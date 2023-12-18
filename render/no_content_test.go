@@ -1,11 +1,12 @@
 package render_test
 
 import (
-	"github.com/jvcoutinho/lit/render"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/jvcoutinho/lit/render"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNoContentResponse(t *testing.T) {
