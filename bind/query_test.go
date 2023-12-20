@@ -316,7 +316,7 @@ func TestQuery(t *testing.T) {
 				return bind.Query[pointerReceiverValidatableFields](r)
 			},
 			expectedResult: pointerReceiverValidatableFields{String: "string"},
-			expectedError:  "String should have a length greater than 6",
+			expectedError:  "string should have a length greater than 6",
 		},
 	}
 

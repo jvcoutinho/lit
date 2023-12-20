@@ -275,7 +275,7 @@ func TestURIParameters(t *testing.T) {
 				return bind.URIParameters[pointerReceiverValidatableFields](r)
 			},
 			expectedResult: pointerReceiverValidatableFields{String: "string"},
-			expectedError:  "String should have a length greater than 6",
+			expectedError:  "string should have a length greater than 6",
 		},
 	}
 

@@ -10,6 +10,11 @@ import (
 
 const (
 	validateTag            = "validate"
+	jsonTag                = "json"
+	uriTag                 = "uri"
+	queryTag               = "query"
+	headerTag              = "header"
+	formTag                = "form"
 	nonStructTypeParameter = "T must be a struct type"
 )
 
@@ -26,7 +31,9 @@ func (e notFieldPointerError) Error() string {
 // Fields validates the fields of a struct of type T.
 //
 // It uses the "validate" tag from the fields to build a message for the user in case the validation fails.
-// If the tag is set as the empty string or is missing in a field, it uses the field's name instead.
+// If the tag is set as the empty string or is missing in a field, it tries to use the value from the tags of the
+// binding functions.
+// If none are present, it uses the field's name instead.
 //
 // If T is not a struct type, Fields panics.
 func Fields[T any](target *T, validations ...Field) error {
@@ -60,21 +67,26 @@ func Fields[T any](target *T, validations ...Field) error {
 				panic(notFieldPointerError{structValue, ai}.Error())
 			}
 
-			violations[vi].Message = strings.ReplaceAll(validation.Message,
-				fmt.Sprintf("{%d}", ai), getReplacement(field, validateTag))
+			violations[vi].Message = strings.ReplaceAll(
+				validation.Message,
+				fmt.Sprintf("{%d}", ai),
+				getReplacement(field, validateTag, jsonTag, uriTag, queryTag, headerTag, formTag),
+			)
 		}
 	}
 
 	return Error{Violations: violations}
 }
 
-func getReplacement(field reflect.StructField, tag string) string {
-	value, ok := field.Tag.Lookup(tag)
-	if !ok || value == "" {
-		return field.Name
+func getReplacement(field reflect.StructField, tags ...string) string {
+	for _, tag := range tags {
+		value, ok := field.Tag.Lookup(tag)
+		if ok && value != "" {
+			return value
+		}
 	}
 
-	return value
+	return field.Name
 }
 
 func getArgumentAddress(addresses map[any]unsafe.Pointer, argument any) (unsafe.Pointer, bool) {
