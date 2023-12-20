@@ -21,7 +21,7 @@ func TestHasPrefix(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			prefix:      "prefix",
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "HasPrefix",
@@ -70,7 +70,7 @@ func TestHasSuffix(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			suffix:      "suffix",
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "HasSuffix",

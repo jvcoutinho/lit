@@ -22,7 +22,7 @@ func TestGreater(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			value:       10,
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "Greater",
@@ -71,7 +71,7 @@ func TestGreaterOrEqual(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			value:       10,
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "Greater",
@@ -126,7 +126,7 @@ func TestLess(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			value:       10,
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "Less",
@@ -175,7 +175,7 @@ func TestLessOrEqual(t *testing.T) {
 			description: "NilPointer",
 			target:      nil,
 			value:       10,
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "Less",
@@ -232,7 +232,7 @@ func TestBetween(t *testing.T) {
 			target:      nil,
 			min:         10,
 			max:         20,
-			expected:    true,
+			expected:    false,
 		},
 		{
 			description: "LessThanMin",
