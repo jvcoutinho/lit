@@ -68,7 +68,7 @@ func Fields[T any](target *T, validations ...Field) error {
 			}
 
 			violations[vi].Message = strings.ReplaceAll(
-				validation.Message,
+				violations[vi].Message,
 				fmt.Sprintf("{%d}", ai),
 				getReplacement(field, validateTag, jsonTag, uriTag, queryTag, headerTag, formTag),
 			)
