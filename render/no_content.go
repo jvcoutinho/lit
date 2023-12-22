@@ -10,8 +10,9 @@ type NoContentResponse struct {
 func (r NoContentResponse) Write(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 
+	responseHeader := w.Header()
 	for key := range r.Header {
-		w.Header().Set(key, r.Header.Get(key))
+		responseHeader.Set(key, r.Header.Get(key))
 	}
 }
 

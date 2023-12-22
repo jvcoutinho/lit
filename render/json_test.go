@@ -2,11 +2,12 @@ package render_test
 
 import (
 	"errors"
-	"github.com/jvcoutinho/lit/render"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/jvcoutinho/lit/render"
+	"github.com/stretchr/testify/require"
 )
 
 func TestJSONResponse(t *testing.T) {
@@ -26,7 +27,7 @@ func TestJSONResponse(t *testing.T) {
 		expectedHeader     http.Header
 	}{
 		{
-			description: "WhenBodyIsObject_ShouldMarshalIt",
+			description: "WhenBodyIsObject_ShouldMarshalAsIs",
 			response: render.JSON(203, jsonObject{
 				Key1: "key1",
 				Key2: 100,
