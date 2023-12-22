@@ -9,8 +9,6 @@ import (
 )
 
 // StreamResponse is a lit.Response that sends separated small chunks of data from a given content.
-//
-// To stream files, use File instead.
 type StreamResponse struct {
 	Request      *lit.Request
 	Content      io.ReadSeeker
@@ -24,8 +22,6 @@ func (r StreamResponse) Write(w http.ResponseWriter) {
 
 // WithFilePath sets the file path property of the stream. If it is set, StreamResponse uses its extension
 // to derive the Content-Type header, falling back to the stream content otherwise or if it fails.
-//
-// Note that File is more appropriated for streaming of files.
 func (r StreamResponse) WithFilePath(filePath string) StreamResponse {
 	r.FilePath = filePath
 	return r
@@ -40,8 +36,6 @@ func (r StreamResponse) WithLastModified(lastModified time.Time) StreamResponse 
 }
 
 // Stream responds the request with a stream, sending smaller chunks of a possibly large data.
-//
-// To stream files, use File instead.
 func Stream(r *lit.Request, content io.ReadSeeker) StreamResponse {
 	return StreamResponse{r, content, "", time.Time{}}
 }
