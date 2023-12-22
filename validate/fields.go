@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	validateTag            = "validate"
 	jsonTag                = "json"
+	yamlTag                = "yaml"
+	xmlTag                 = "xml"
 	uriTag                 = "uri"
 	queryTag               = "query"
 	headerTag              = "header"
@@ -69,7 +70,7 @@ func Fields[T any](target *T, validations ...Field) error {
 			violations[vi].Message = strings.ReplaceAll(
 				violations[vi].Message,
 				fmt.Sprintf("{%d}", ai),
-				getReplacement(field, validateTag, jsonTag, uriTag, queryTag, headerTag, formTag),
+				getReplacement(field, jsonTag, uriTag, queryTag, headerTag, formTag, yamlTag, xmlTag),
 			)
 		}
 	}
