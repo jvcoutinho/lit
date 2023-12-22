@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	validateTag            = "validate"
 	jsonTag                = "json"
+	yamlTag                = "yaml"
+	xmlTag                 = "xml"
 	uriTag                 = "uri"
 	queryTag               = "query"
 	headerTag              = "header"
@@ -30,10 +31,9 @@ func (e notFieldPointerError) Error() string {
 
 // Fields validates the fields of a struct of type T.
 //
-// It uses the "validate" tag from the fields to build a message for the user in case the validation fails.
-// If the tag is set as the empty string or is missing in a field, it tries to use the value from the tags of the
-// binding functions.
-// If none are present, it uses the field's name instead.
+// It uses the tags of the binding functions (such as "uri", "query" or "json") from the fields to build a message for
+// the user in case the validation fails.
+// If none of these tags are set or are set as the empty string, Fields uses the field's name instead.
 //
 // If T is not a struct type, Fields panics.
 func Fields[T any](target *T, validations ...Field) error {
@@ -70,7 +70,7 @@ func Fields[T any](target *T, validations ...Field) error {
 			violations[vi].Message = strings.ReplaceAll(
 				violations[vi].Message,
 				fmt.Sprintf("{%d}", ai),
-				getReplacement(field, validateTag, jsonTag, uriTag, queryTag, headerTag, formTag),
+				getReplacement(field, jsonTag, uriTag, queryTag, headerTag, formTag, yamlTag, xmlTag),
 			)
 		}
 	}

@@ -62,8 +62,8 @@ func IPv6Address(target *string) Field {
 
 // DateTime validates if target is a valid date-time string.
 //
-// Note that binding functions bind strings to [time.Time] fields if the layout is time.RFC3339, validating
-// them in the process. In this case, this function is not needed.
+// Note that binding functions bind strings to fields with type [time.Time] if the layout is time.RFC3339, validating
+// them in the process.
 func DateTime(target *string, layout string) Field {
 	var err error
 	if target != nil {
