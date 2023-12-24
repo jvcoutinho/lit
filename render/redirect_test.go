@@ -1,9 +1,9 @@
 package render_test
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/jvcoutinho/lit"
@@ -93,7 +93,7 @@ func TestRedirectResponse(t *testing.T) {
 			var (
 				writer  = httptest.NewRecorder()
 				request = lit.NewRequest(
-					httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString("body")),
+					httptest.NewRequest(http.MethodPost, "/test", strings.NewReader("body")),
 				)
 				responses = []render.RedirectResponse{
 					test.response(request, "https://redirect-target.com"),

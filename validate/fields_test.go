@@ -1,7 +1,6 @@
 package validate_test
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -194,7 +193,7 @@ func TestFields(t *testing.T) {
 }
 
 func ExampleFields() {
-	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBufferString(`
+	req := httptest.NewRequest(http.MethodPost, "/books", strings.NewReader(`
 		{"name": "Percy Jackson", "publishYear": 2007}
 	`))
 

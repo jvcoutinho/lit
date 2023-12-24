@@ -1,10 +1,10 @@
 package bind_test
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -370,7 +370,7 @@ func TestRequest(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
+			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
 			request.URL.RawQuery = test.query.Encode()
 			for key, value := range test.header {
 				for _, v := range value {

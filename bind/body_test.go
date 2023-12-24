@@ -1,10 +1,10 @@
 package bind_test
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -317,7 +317,7 @@ array:
 			t.Parallel()
 
 			// Arrange
-			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
+			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
 			request.Header.Add("Content-Type", test.contentType)
 
 			r := lit.NewRequest(request)
@@ -347,7 +347,7 @@ array:
 }
 
 func ExampleBody() {
-	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBufferString(`
+	req := httptest.NewRequest(http.MethodPost, "/books", strings.NewReader(`
 		{"name": "Percy Jackson", "publishYear": 2009}
 	`))
 
