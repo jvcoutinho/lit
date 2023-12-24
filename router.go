@@ -10,6 +10,17 @@ import (
 // Handler handles requests.
 type Handler func(r *Request) Response
 
+// Base returns the equivalent http.HandlerFunc of this handler.
+func (h Handler) Base() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		r := NewRequest(req, nil)
+
+		if response := h(r); response != nil {
+			response.Write(w)
+		}
+	}
+}
+
 // Middleware transforms a Handler, extending its functionality.
 type Middleware func(h Handler) Handler
 
@@ -77,6 +88,35 @@ func (r *Router) Handle(path string, method string, handler Handler, middlewares
 			response.Write(w)
 		}
 	})
+}
+
+// HandleNotFound registers handler to be called when no matching route is found. By default, Lit uses a
+// wrapped http.NotFound.
+//
+// If handler is nil, HandleNotFound panics.
+func (r *Router) HandleNotFound(handler Handler) {
+	if handler == nil {
+		panic("handler should not be nil")
+	}
+
+	r.router.NotFound = handler.Base()
+}
+
+// HandleMethodNotAllowed registers handler to be called when there is a match to a route, but not with that method.
+// By default, Lit uses a wrapped http.Error with status code [405 Method Not Allowed].
+//
+// If handler is nil, HandleMethodNotAllowed clears the current set handler. In this case, the behaviour is to call
+// the Not Found handler (either the one defined in HandleNotFound or the default one).
+//
+// [405 Method Not Allowed]: https://developer.mozilla.org/en-US/docs/web/http/status/405
+func (r *Router) HandleMethodNotAllowed(handler Handler) {
+	if handler == nil {
+		r.router.HandleMethodNotAllowed = false
+		return
+	}
+
+	r.router.HandleMethodNotAllowed = true
+	r.router.MethodNotAllowed = handler.Base()
 }
 
 // GET registers handler for path and GET method and optional local middlewares.

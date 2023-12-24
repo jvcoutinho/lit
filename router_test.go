@@ -436,10 +436,63 @@ func TestRouter_Use(t *testing.T) {
 	}
 }
 
+func TestRouter_HandleNotFound(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		description string
+		handler     lit.Handler
+		panicValue  string
+	}{
+		{
+			description: "WhenHandlerIsNil_ShouldPanic",
+			handler:     nil,
+			panicValue:  "handler should not be nil",
+		},
+		{
+			description: "WhenHandlerIsNotNil_ShouldNotPanic",
+			handler: func(_ *lit.Request) lit.Response {
+				return nil
+			},
+			panicValue: "",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.description, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			router := lit.NewRouter()
+
+			// Act
+			// Assert
+			if test.panicValue != "" {
+				require.PanicsWithValue(t, test.panicValue, func() {
+					router.HandleNotFound(test.handler)
+				})
+			}
+		})
+	}
+}
+
 func TestRouter_ServeHTTP(t *testing.T) {
 	t.Parallel()
 
 	var (
+		notFoundHandler = func(r *lit.Request) lit.Response {
+			return lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusNotFound)
+			})
+		}
+
+		methodNotAllowedHandler = func(r *lit.Request) lit.Response {
+			return lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			})
+		}
+
 		printUsersHandler = func(r *lit.Request) lit.Response {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
 				_, _ = w.Write([]byte("users"))
@@ -492,6 +545,55 @@ func TestRouter_ServeHTTP(t *testing.T) {
 	}{
 		{
 			description:        "GivenHandlerIsNotRegistered_ShouldRespondNotFound",
+			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
+			expectedBody:       "404 page not found\n",
+			expectedStatusCode: http.StatusNotFound,
+			expectedHeader: http.Header{
+				"Content-Type":           {"text/plain; charset=utf-8"},
+				"X-Content-Type-Options": {"nosniff"},
+			},
+		},
+		{
+			description: "GivenHandlerIsNotRegistered_AndNotFoundHandlerIsSet_ShouldRespondHandlerResponse",
+			setupRouter: func(r *lit.Router) {
+				r.HandleNotFound(notFoundHandler)
+			},
+			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
+			expectedBody:       "",
+			expectedStatusCode: http.StatusNotFound,
+			expectedHeader:     http.Header{},
+		},
+		{
+			description: "GivenHandlerIsRegisteredForAnotherMethod_ShouldRespondMethodNotAllowed",
+			setupRouter: func(r *lit.Router) {
+				r.Handle("/users", http.MethodPost, printUsersHandler)
+			},
+			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
+			expectedBody:       "Method Not Allowed\n",
+			expectedStatusCode: http.StatusMethodNotAllowed,
+			expectedHeader: http.Header{
+				"Allow":                  {"OPTIONS, POST"},
+				"Content-Type":           {"text/plain; charset=utf-8"},
+				"X-Content-Type-Options": {"nosniff"}},
+		},
+		{
+			description: "GivenHandlerIsRegisteredForAnotherMethod_AndMethodNotAllowedHandlerIsSet_ShouldRespondHandlerResponse",
+			setupRouter: func(r *lit.Router) {
+				r.HandleMethodNotAllowed(methodNotAllowedHandler)
+				r.Handle("/users", http.MethodPost, printUsersHandler)
+			},
+			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
+			expectedBody:       "",
+			expectedStatusCode: http.StatusMethodNotAllowed,
+			expectedHeader: http.Header{
+				"Allow": {"OPTIONS, POST"},
+			},
+		},
+		{
+			description: "GivenHandlerIsRegisteredForAnotherMethod_AndMethodNotAllowedHandlerIsNotSet_ShouldRespondNotFound",
+			setupRouter: func(r *lit.Router) {
+				r.HandleMethodNotAllowed(nil)
+			},
 			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
 			expectedBody:       "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
