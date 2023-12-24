@@ -5,12 +5,12 @@ import "net/http"
 // Response is the output of a [Handler].
 type Response interface {
 	// Write responds the request.
-	Write(writer http.ResponseWriter)
+	Write(w http.ResponseWriter)
 }
 
 // ResponseFunc writes response data into [http.ResponseWriter].
-type ResponseFunc func(writer http.ResponseWriter)
+type ResponseFunc func(w http.ResponseWriter)
 
-func (r ResponseFunc) Write(writer http.ResponseWriter) {
-	r(writer)
+func (r ResponseFunc) Write(w http.ResponseWriter) {
+	r(w)
 }
