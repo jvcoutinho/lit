@@ -1,6 +1,7 @@
 package lit
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/url"
@@ -26,6 +27,14 @@ func NewRequest(request *http.Request) *Request {
 	}
 }
 
+// WithContext sets the context of this request.
+//
+// If ctx is nil, WithContext panics.
+func (r *Request) WithContext(ctx context.Context) *Request {
+	r.base = r.base.WithContext(ctx)
+	return r
+}
+
 // WithURIParameters sets the URI parameters (associated with their values) of this request.
 func (r *Request) WithURIParameters(parameters map[string]string) *Request {
 	r.parameters = parameters
@@ -36,9 +45,14 @@ func (r *Request) WithURIParameters(parameters map[string]string) *Request {
 //
 // Use [bind.URIParameters] for standard model binding and validation features.
 //
-// The keys from this map don't start with ":" prefix.
+// The keys from this map don't start with the ":" prefix.
 func (r *Request) URIParameters() map[string]string {
 	return r.parameters
+}
+
+// Context of this request.
+func (r *Request) Context() context.Context {
+	return r.base.Context()
 }
 
 // URL of this request.
