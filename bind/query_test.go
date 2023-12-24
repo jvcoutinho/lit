@@ -329,7 +329,7 @@ func TestQuery(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 			request.URL.RawQuery = test.query.Encode()
 
-			r := lit.NewRequest(request, nil)
+			r := lit.NewRequest(request)
 
 			// Act
 			if test.shouldPanic {
@@ -358,7 +358,7 @@ func ExampleQuery() {
 	req := httptest.NewRequest(http.MethodGet, "/books", nil)
 	req.URL.RawQuery = "publish_year=2009&name=Percy%20Jackson"
 
-	r := lit.NewRequest(req, nil)
+	r := lit.NewRequest(req)
 
 	type BookQuery struct {
 		PublishYear uint   `query:"publish_year"`

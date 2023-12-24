@@ -320,7 +320,7 @@ array:
 			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString(test.body))
 			request.Header.Add("Content-Type", test.contentType)
 
-			r := lit.NewRequest(request, nil)
+			r := lit.NewRequest(request)
 
 			// Act
 			// Act
@@ -351,7 +351,7 @@ func ExampleBody() {
 		{"name": "Percy Jackson", "publishYear": 2009}
 	`))
 
-	r := lit.NewRequest(req, nil)
+	r := lit.NewRequest(req)
 
 	type RequestBody struct {
 		Name        string `json:"name"`

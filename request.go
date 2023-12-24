@@ -8,22 +8,28 @@ import (
 
 // Request is the input of a [Handler].
 type Request struct {
-	Request    *http.Request
+	base       *http.Request
 	parameters map[string]string
 }
 
-// NewRequest creates a new [Request] instance with an underlying [*http.Request].
+// NewRequest creates a new [Request] instance from a [*http.Request].
 //
 // If request is nil, NewRequest panics.
-func NewRequest(request *http.Request, parameters map[string]string) *Request {
+func NewRequest(request *http.Request) *Request {
 	if request == nil {
 		panic("request must not be nil")
 	}
 
 	return &Request{
 		request,
-		parameters,
+		nil,
 	}
+}
+
+// WithURIParameters sets the URI parameters (associated with their values) of this request.
+func (r *Request) WithURIParameters(parameters map[string]string) *Request {
+	r.parameters = parameters
+	return r
 }
 
 // URIParameters returns this request's URL path parameters and their values.
@@ -37,25 +43,25 @@ func (r *Request) URIParameters() map[string]string {
 
 // URL of this request.
 func (r *Request) URL() *url.URL {
-	return r.Request.URL
+	return r.base.URL
 }
 
 // Method of this request.
 func (r *Request) Method() string {
-	return r.Request.Method
+	return r.base.Method
 }
 
 // Body of this request.
 func (r *Request) Body() io.ReadCloser {
-	return r.Request.Body
+	return r.base.Body
 }
 
 // Header fields of this request.
 func (r *Request) Header() http.Header {
-	return r.Request.Header
+	return r.base.Header
 }
 
-// Base returns the underlying http.Request.
+// Base returns the equivalent [*http.Request] of this request.
 func (r *Request) Base() *http.Request {
-	return r.Request
+	return r.base
 }

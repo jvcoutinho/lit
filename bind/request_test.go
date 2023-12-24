@@ -378,7 +378,7 @@ func TestRequest(t *testing.T) {
 				}
 			}
 
-			r := lit.NewRequest(request, test.uriParameters)
+			r := lit.NewRequest(request).WithURIParameters(test.uriParameters)
 
 			// Act
 			if test.shouldPanic {

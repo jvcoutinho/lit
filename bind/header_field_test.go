@@ -362,7 +362,7 @@ func TestHeaderField_ShouldBindSupportedTypes(t *testing.T) {
 				}
 			}
 
-			r := lit.NewRequest(request, nil)
+			r := lit.NewRequest(request)
 
 			// Act
 			if test.shouldPanic {
@@ -392,7 +392,7 @@ func ExampleHeaderField() {
 	req.Header.Add("Content-Length", "150")
 	req.Header.Add("Authorization", "Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH")
 
-	r := lit.NewRequest(req, nil)
+	r := lit.NewRequest(req)
 
 	contentLength, err := bind.HeaderField[int](r, "Content-Length")
 	if err == nil {

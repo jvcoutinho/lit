@@ -14,7 +14,7 @@ type RedirectResponse struct {
 }
 
 func (r RedirectResponse) Write(w http.ResponseWriter) {
-	http.Redirect(w, r.Request.Request, r.LocationURL, r.StatusCode)
+	http.Redirect(w, r.Request.Base(), r.LocationURL, r.StatusCode)
 }
 
 // Redirect responds the request with a redirection status code and a target URL (absolute or relative to the

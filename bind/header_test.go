@@ -332,7 +332,7 @@ func TestHeader(t *testing.T) {
 				}
 			}
 
-			r := lit.NewRequest(request, nil)
+			r := lit.NewRequest(request)
 
 			// Act
 			if test.shouldPanic {
@@ -362,7 +362,7 @@ func ExampleHeader() {
 	req.Header.Add("Content-Length", "150")
 	req.Header.Add("Authorization", "Bearer uPSsoa65gqkFv2Z6sZ3rZCZwnCjzaXe8TNdk0bJCFFJGrH6wmnzyK4evHBtTuvVH")
 
-	r := lit.NewRequest(req, nil)
+	r := lit.NewRequest(req)
 
 	type Header struct {
 		ContentLength uint   `header:"Content-Length"`

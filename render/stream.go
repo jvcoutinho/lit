@@ -17,7 +17,7 @@ type StreamResponse struct {
 }
 
 func (r StreamResponse) Write(w http.ResponseWriter) {
-	http.ServeContent(w, r.Request.Request, r.FilePath, r.LastModified, r.Content)
+	http.ServeContent(w, r.Request.Base(), r.FilePath, r.LastModified, r.Content)
 }
 
 // WithFilePath sets the file path property of the stream. If it is set, StreamResponse uses its extension

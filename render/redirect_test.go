@@ -94,7 +94,6 @@ func TestRedirectResponse(t *testing.T) {
 				writer  = httptest.NewRecorder()
 				request = lit.NewRequest(
 					httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString("body")),
-					nil,
 				)
 				responses = []render.RedirectResponse{
 					test.response(request, "https://redirect-target.com"),

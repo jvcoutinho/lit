@@ -17,12 +17,9 @@ func TestStreamResponse(t *testing.T) {
 
 	// Arrange
 	var (
-		writer  = httptest.NewRecorder()
-		reader  = bytes.NewReader([]byte("content"))
-		request = lit.NewRequest(
-			httptest.NewRequest(http.MethodGet, "/stream", nil),
-			nil,
-		)
+		writer   = httptest.NewRecorder()
+		reader   = bytes.NewReader([]byte("content"))
+		request  = lit.NewRequest(httptest.NewRequest(http.MethodGet, "/stream", nil))
 		response = render.Stream(request, reader).
 				WithFilePath("./stream_test.go").
 				WithLastModified(time.Date(2023, 20, 10, 10, 10, 10, 20, time.UTC))

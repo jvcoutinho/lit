@@ -17,7 +17,7 @@ type FileResponse struct {
 }
 
 func (r FileResponse) Write(w http.ResponseWriter) {
-	http.ServeFile(w, r.Request.Request, r.FilePath)
+	http.ServeFile(w, r.Request.Base(), r.FilePath)
 }
 
 // File responds the request with a stream of the contents of a file or directory in path

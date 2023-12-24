@@ -198,7 +198,7 @@ func ExampleFields() {
 		{"name": "Percy Jackson", "publishYear": 2007}
 	`))
 
-	r := lit.NewRequest(req, nil)
+	r := lit.NewRequest(req)
 
 	type RequestBody struct {
 		Name        string `json:"name" validate:"name"`

@@ -287,7 +287,7 @@ func TestURIParameters(t *testing.T) {
 			// Arrange
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 
-			r := lit.NewRequest(request, test.parameters)
+			r := lit.NewRequest(request).WithURIParameters(test.parameters)
 
 			// Act
 			if test.shouldPanic {
@@ -315,6 +315,7 @@ func TestURIParameters(t *testing.T) {
 func ExampleURIParameters() {
 	r := lit.NewRequest(
 		httptest.NewRequest(http.MethodGet, "/users/123/books/book_1", nil),
+	).WithURIParameters(
 		map[string]string{"user_id": "123", "book_id": "book_1"},
 	)
 

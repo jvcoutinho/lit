@@ -13,7 +13,7 @@ type Handler func(r *Request) Response
 // Base returns the equivalent http.HandlerFunc of this handler.
 func (h Handler) Base() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		r := NewRequest(req, nil)
+		r := NewRequest(req)
 
 		if response := h(r); response != nil {
 			response.Write(w)
@@ -79,7 +79,7 @@ func (r *Router) Handle(path string, method string, handler Handler, middlewares
 
 	r.router.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		var (
-			request     = NewRequest(req, getArguments(params))
+			request     = NewRequest(req).WithURIParameters(getArguments(params))
 			middlewares = append(r.middlewares, middlewares...)
 			response    = transform(handler, middlewares)(request)
 		)

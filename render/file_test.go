@@ -69,11 +69,8 @@ func TestFileResponse(t *testing.T) {
 
 			// Arrange
 			var (
-				writer  = httptest.NewRecorder()
-				request = lit.NewRequest(
-					httptest.NewRequest(http.MethodGet, "/stream", nil),
-					nil,
-				)
+				writer   = httptest.NewRecorder()
+				request  = lit.NewRequest(httptest.NewRequest(http.MethodGet, "/stream", nil))
 				response = render.File(request, test.filePath)
 			)
 

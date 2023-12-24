@@ -80,14 +80,14 @@ func bindBody(r *lit.Request, target any, targetValue reflect.Value) error {
 }
 
 func bindForm(r *lit.Request, targetValue reflect.Value) error {
-	err := r.Request.ParseForm()
+	err := r.Base().ParseForm()
 	if err != nil {
 		return err
 	}
 
 	fields := reflect.VisibleFields(targetValue.Type())
 
-	return bindFields(r.Request.Form, formTag, targetValue, fields, bindAll)
+	return bindFields(r.Base().Form, formTag, targetValue, fields, bindAll)
 }
 
 func decodeJSON(body io.ReadCloser, target any) error {
