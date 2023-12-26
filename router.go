@@ -185,7 +185,8 @@ func (r *Router) HEAD(path string, handler Handler, middlewares ...Middleware) {
 // ServeHTTP dispatches the request to the handler whose pattern most closely matches the request URL
 // and whose method is the same as the request method.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	r.router.ServeHTTP(writer, request)
+	recorder := NewRecorder(writer)
+	r.router.ServeHTTP(recorder, request)
 }
 
 func getArguments(params httprouter.Params) map[string]string {

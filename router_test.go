@@ -495,7 +495,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 
 		printUsersHandler = func(r *lit.Request) lit.Response {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
-				_, _ = w.Write([]byte("users"))
+				w.Write([]byte("users"))
 			})
 		}
 
@@ -503,8 +503,8 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
 				uri := r.URIParameters()
 
-				_, _ = w.Write([]byte(uri["user_id"] + "\n"))
-				_, _ = w.Write([]byte(uri["book_id"]))
+				w.Write([]byte(uri["user_id"] + "\n"))
+				w.Write([]byte(uri["book_id"]))
 			})
 		}
 
@@ -515,7 +515,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 				return lit.ResponseFunc(func(w http.ResponseWriter) {
 					w.WriteHeader(http.StatusAccepted) // this assures the order matters in tests
 
-					_, _ = w.Write([]byte("Hello, World!\n"))
+					w.Write([]byte("Hello, World!\n"))
 					res.Write(w)
 				})
 			}
@@ -529,7 +529,7 @@ func TestRouter_ServeHTTP(t *testing.T) {
 					w.WriteHeader(http.StatusOK) // this assures the order matters in tests
 
 					res.Write(w)
-					_, _ = w.Write([]byte("\nBye, World!"))
+					w.Write([]byte("\nBye, World!"))
 				})
 			}
 		}
