@@ -9,9 +9,7 @@ import (
 
 	"github.com/jvcoutinho/lit"
 	"github.com/jvcoutinho/lit/bind"
-
 	"github.com/jvcoutinho/lit/validate"
-
 	"github.com/stretchr/testify/require"
 )
 

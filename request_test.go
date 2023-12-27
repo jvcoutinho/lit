@@ -44,6 +44,7 @@ func TestRequest(t *testing.T) {
 				require.PanicsWithValue(t, test.panicValue, func() {
 					_ = lit.NewRequest(test.request)
 				})
+
 				return
 			}
 
@@ -96,6 +97,7 @@ func TestRequest_WithContext(t *testing.T) {
 				require.PanicsWithValue(t, test.panicValue, func() {
 					r.WithContext(test.context)
 				})
+
 				return
 			}
 

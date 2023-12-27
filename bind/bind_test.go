@@ -3,9 +3,8 @@ package bind_test
 import (
 	"time"
 
-	"github.com/jvcoutinho/lit/validate"
-
 	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/validate"
 )
 
 type unbindableField struct {
@@ -13,6 +12,7 @@ type unbindableField struct {
 }
 
 type ignorableFields struct {
+	//nolint: unused
 	unexported string `uri:"unexported" query:"unexported" header:"unexported"`
 	Missing    string `uri:"missing" query:"missing" header:"missing"`
 	Untagged   string

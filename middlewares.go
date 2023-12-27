@@ -21,7 +21,6 @@ func Recover(h Handler) Handler {
 					http.Error(w, fmt.Sprintf("%v", value), http.StatusInternalServerError)
 				})
 			}
-
 		}()
 
 		return h(r)

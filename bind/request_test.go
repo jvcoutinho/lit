@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jvcoutinho/lit/bind"
-
 	"github.com/jvcoutinho/lit"
+	"github.com/jvcoutinho/lit/bind"
 	"github.com/stretchr/testify/require"
 )
 

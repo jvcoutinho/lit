@@ -115,5 +115,4 @@ func TestLog(t *testing.T) {
 			require.Regexp(t, test.expectedContent, output.String())
 		})
 	}
-
 }
