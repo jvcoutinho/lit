@@ -8,7 +8,7 @@ import (
 // Message is a standard response for strings and errors.
 type Message struct {
 	// Content of the message.
-	Value string `json:"message"`
+	Message string `json:"message"`
 }
 
 // JSONResponse is a lit.Response that prints a JSON formatted-body as response. It sets
@@ -54,12 +54,11 @@ func (r JSONResponse) Write(w http.ResponseWriter) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if err := r.writeBody(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 }
 
 func (r JSONResponse) writeBody(w http.ResponseWriter) error {
