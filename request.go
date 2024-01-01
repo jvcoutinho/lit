@@ -13,6 +13,11 @@ type Request struct {
 	parameters map[string]string
 }
 
+// NewEmptyRequest creates a new [Request] instance.
+func NewEmptyRequest() *Request {
+	return &Request{}
+}
+
 // NewRequest creates a new [Request] instance from a [*http.Request].
 //
 // If request is nil, NewRequest panics.
@@ -25,6 +30,18 @@ func NewRequest(request *http.Request) *Request {
 		request,
 		nil,
 	}
+}
+
+// WithRequest sets the base request of this request.
+//
+// If req is nil, WithRequest panics.
+func (r *Request) WithRequest(req *http.Request) *Request {
+	if req == nil {
+		panic("request should not be nil")
+	}
+
+	r.base = req
+	return r
 }
 
 // WithContext sets the context of this request.
@@ -41,7 +58,8 @@ func (r *Request) WithURIParameters(parameters map[string]string) *Request {
 	return r
 }
 
-// URIParameters returns this request's URL path parameters and their values.
+// URIParameters returns this request's URL path parameters and their values. It can be nil, meaning the
+// handler expects no parameters.
 //
 // Use [bind.URIParameters] for standard model binding and validation features.
 //

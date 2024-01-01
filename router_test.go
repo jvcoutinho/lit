@@ -642,9 +642,9 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		{
 			description: "GivenRouterHasGlobalMiddlewares_ShouldUseThem",
 			setupRouter: func(r *lit.Router) {
-				r.Handle("/users", http.MethodGet, printUsersHandler)
 				r.Use(helloWorldMiddleware)
 				r.Use(byeWorldMiddleware)
+				r.Handle("/users", http.MethodGet, printUsersHandler)
 			},
 			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
 			expectedBody:       "Hello, World!\nusers\nBye, World!",
@@ -654,10 +654,10 @@ func TestRouter_ServeHTTP(t *testing.T) {
 		{
 			description: "GivenRouterHasGlobalMiddlewares_AndHandleHasLocalMiddlewares_ShouldUseThem",
 			setupRouter: func(r *lit.Router) {
+				r.Use(helloWorldMiddleware)
 				r.Handle("/users", http.MethodGet, printUsersHandler,
 					byeWorldMiddleware,
 				)
-				r.Use(helloWorldMiddleware)
 			},
 			request:            httptest.NewRequest(http.MethodGet, "/users", nil),
 			expectedBody:       "Hello, World!\nusers\nBye, World!",

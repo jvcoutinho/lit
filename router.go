@@ -3,6 +3,7 @@ package lit
 import (
 	"net/http"
 	"slices"
+	"sync"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -27,6 +28,7 @@ type Middleware func(h Handler) Handler
 // Router manages, listens and serves HTTP requests.
 type Router struct {
 	router      *httprouter.Router
+	requestPool sync.Pool
 	middlewares []Middleware
 }
 
@@ -34,6 +36,7 @@ type Router struct {
 func NewRouter() *Router {
 	return &Router{
 		httprouter.New(),
+		sync.Pool{New: func() any { return NewEmptyRequest() }},
 		make([]Middleware, 0),
 	}
 }
@@ -77,16 +80,20 @@ func (r *Router) Handle(path string, method string, handler Handler, middlewares
 		panic("middlewares should not be nil")
 	}
 
+	handler = transform(transform(handler, middlewares), r.middlewares)
+
 	r.router.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		var (
-			request     = NewRequest(req).WithURIParameters(getArguments(params))
-			middlewares = append(r.middlewares, middlewares...)
-			response    = transform(handler, middlewares)(request)
-		)
+		request := r.requestPool.Get().(*Request).
+			WithRequest(req).
+			WithURIParameters(getArguments(params))
+
+		response := handler(request)
 
 		if response != nil {
 			response.Write(w)
 		}
+
+		r.requestPool.Put(request)
 	})
 }
 
@@ -185,12 +192,15 @@ func (r *Router) HEAD(path string, handler Handler, middlewares ...Middleware) {
 // ServeHTTP dispatches the request to the handler whose pattern most closely matches the request URL
 // and whose method is the same as the request method.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	recorder := NewRecorder(writer)
-	r.router.ServeHTTP(recorder, request)
+	r.router.ServeHTTP(writer, request)
 }
 
 func getArguments(params httprouter.Params) map[string]string {
-	arguments := make(map[string]string)
+	if len(params) == 0 {
+		return nil
+	}
+
+	arguments := make(map[string]string, len(params))
 	for _, param := range params {
 		arguments[param.Key] = param.Value
 	}

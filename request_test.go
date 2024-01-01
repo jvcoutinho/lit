@@ -61,6 +61,49 @@ func TestRequest(t *testing.T) {
 	}
 }
 
+func TestRequest_WithRequest(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		description string
+		request     *http.Request
+		panicValue  string
+	}{
+		{
+			description: "WhenRequestIsNil_ShouldPanic",
+			request:     nil,
+			panicValue:  "request should not be nil",
+		},
+		{
+			description: "WhenContextIsNotNil_ShouldSetContext",
+			request:     httptest.NewRequest(http.MethodGet, "/", nil),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.description, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			r := lit.NewRequest(
+				httptest.NewRequest(http.MethodGet, "/users", nil),
+			)
+
+			// Act
+			if test.panicValue != "" {
+				require.PanicsWithValue(t, test.panicValue, func() {
+					r.WithRequest(test.request)
+				})
+
+				return
+			}
+
+			r.WithRequest(test.request)
+		})
+	}
+}
+
 func TestRequest_WithContext(t *testing.T) {
 	t.Parallel()
 

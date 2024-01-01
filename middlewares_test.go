@@ -44,43 +44,55 @@ func TestLog(t *testing.T) {
 	tests := []struct {
 		description     string
 		writer          http.ResponseWriter
-		statusCode      int
+		response        lit.Response
 		expectedContent *regexp.Regexp
 	}{
 		{
-			description:     "WhenWriterIsNotRecorder_ShouldNotLog",
-			writer:          httptest.NewRecorder(),
-			statusCode:      http.StatusNotFound,
-			expectedContent: regexp.MustCompile(""),
+			description:     "WhenResponseIsNil_ShouldNotLog",
+			writer:          lit.NewRecorder(httptest.NewRecorder()),
+			response:        nil,
+			expectedContent: regexp.MustCompile("^$"),
 		},
 		{
-			description: "WhenWriterIsRecorder_AndStatusCodeIs2xx_ShouldLogGreen",
+			description: "WhenStatusCodeIs2xx_ShouldLogGreen",
 			writer:      lit.NewRecorder(httptest.NewRecorder()),
-			statusCode:  http.StatusOK,
+			response: lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("log"))
+			}),
 			expectedContent: regexp.MustCompile(
 				"^\n\u001B\\[97;1;42m>> GET /users\u001B\\[0m\n> 200 OK\n> Start Time: .+\n> Remote Address: .+\n> Duration: .+\n> Content-Length: 3\n$",
 			),
 		},
 		{
-			description: "WhenWriterIsRecorder_AndStatusCodeIs3xx_ShouldLogBlue",
+			description: "WhenStatusCodeIs3xx_ShouldLogBlue",
 			writer:      lit.NewRecorder(httptest.NewRecorder()),
-			statusCode:  http.StatusPermanentRedirect,
+			response: lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusPermanentRedirect)
+				w.Write([]byte("log"))
+			}),
 			expectedContent: regexp.MustCompile(
 				"^\n\u001B\\[97;1;104m>> GET /users\u001B\\[0m\n> 308 Permanent Redirect\n> Start Time: .+\n> Remote Address: .+\n> Duration: .+\n> Content-Length: 3\n$",
 			),
 		},
 		{
-			description: "WhenWriterIsRecorder_AndStatusCodeIs4xx_ShouldLogYellow",
+			description: "WhenStatusCodeIs4xx_ShouldLogYellow",
 			writer:      lit.NewRecorder(httptest.NewRecorder()),
-			statusCode:  http.StatusNotFound,
+			response: lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("log"))
+			}),
 			expectedContent: regexp.MustCompile(
 				"^\n\u001B\\[97;1;43m>> GET /users\u001B\\[0m\n> 404 Not Found\n> Start Time: .+\n> Remote Address: .+\n> Duration: .+\n> Content-Length: 3\n$",
 			),
 		},
 		{
-			description: "WhenWriterIsRecorder_AndStatusCodeIs5xx_ShouldLogRed",
+			description: "WhenStatusCodeIs5xx_ShouldLogRed",
 			writer:      lit.NewRecorder(httptest.NewRecorder()),
-			statusCode:  http.StatusInternalServerError,
+			response: lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("log"))
+			}),
 			expectedContent: regexp.MustCompile(
 				"^\n\u001B\\[97;1;41m>> GET /users\u001B\\[0m\n> 500 Internal Server Error\n> Start Time: .+\n> Remote Address: .+\n> Duration: .+\n> Content-Length: 3\n$",
 			),
@@ -95,10 +107,7 @@ func TestLog(t *testing.T) {
 			)
 
 			handler := lit.Handler(func(r *lit.Request) lit.Response {
-				return lit.ResponseFunc(func(w http.ResponseWriter) {
-					w.WriteHeader(test.statusCode)
-					w.Write([]byte("log"))
-				})
+				return test.response
 			})
 
 			var output bytes.Buffer
@@ -109,7 +118,9 @@ func TestLog(t *testing.T) {
 
 			// Act
 			response := lit.Log(handler)(r)
-			response.Write(test.writer)
+			if response != nil {
+				response.Write(httptest.NewRecorder())
+			}
 
 			// Assert
 			require.Regexp(t, test.expectedContent, output.String())

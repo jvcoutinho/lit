@@ -41,13 +41,13 @@ func Log(h Handler) Handler {
 
 		res := h(r)
 
-		return ResponseFunc(func(w http.ResponseWriter) {
-			res.Write(w)
+		if res == nil {
+			return nil
+		}
 
-			recorder, ok := w.(*Recorder)
-			if !ok {
-				return
-			}
+		return ResponseFunc(func(w http.ResponseWriter) {
+			recorder := NewRecorder(w)
+			res.Write(recorder)
 
 			endTime := time.Now()
 
