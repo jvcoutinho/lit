@@ -53,6 +53,8 @@
 //		}
 //	}
 //
+// It is highly recommended to always use the [lit.Log] and [lit.Recover] middlewares, in this order.
+//
 // Check the other examples to explore the capabilities of Lit.
 //
 // # Model binding and validation
