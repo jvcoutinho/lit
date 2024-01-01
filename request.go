@@ -15,7 +15,9 @@ type Request struct {
 
 // NewEmptyRequest creates a new [Request] instance.
 func NewEmptyRequest() *Request {
-	return &Request{}
+	return &Request{
+		parameters: make(map[string]string),
+	}
 }
 
 // NewRequest creates a new [Request] instance from a [*http.Request].
@@ -28,7 +30,7 @@ func NewRequest(request *http.Request) *Request {
 
 	return &Request{
 		request,
-		nil,
+		make(map[string]string),
 	}
 }
 

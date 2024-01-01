@@ -49,6 +49,8 @@ func NewRouter() *Router {
 //
 //	(G1(G2(L1(L2(h)))))(r)
 //
+// Global middlewares should be set before any handler is registered.
+//
 // If m is nil, Use panics.
 func (r *Router) Use(m Middleware) {
 	if m == nil {
@@ -84,8 +86,11 @@ func (r *Router) Handle(path string, method string, handler Handler, middlewares
 
 	r.router.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		request := r.requestPool.Get().(*Request).
-			WithRequest(req).
-			WithURIParameters(getArguments(params))
+			WithRequest(req)
+
+		for _, param := range params {
+			request.parameters[param.Key] = param.Value
+		}
 
 		response := handler(request)
 
@@ -193,19 +198,6 @@ func (r *Router) HEAD(path string, handler Handler, middlewares ...Middleware) {
 // and whose method is the same as the request method.
 func (r *Router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	r.router.ServeHTTP(writer, request)
-}
-
-func getArguments(params httprouter.Params) map[string]string {
-	if len(params) == 0 {
-		return nil
-	}
-
-	arguments := make(map[string]string, len(params))
-	for _, param := range params {
-		arguments[param.Key] = param.Value
-	}
-
-	return arguments
 }
 
 func transform(handler Handler, middlewares []Middleware) Handler {
