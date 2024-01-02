@@ -219,13 +219,31 @@
 //
 // # Testing
 //
-// Handlers can be tested by using the [net/http/httptest] package:
+// Handlers can be tested in several ways. Two of them are:
+//   - Testing in a unit test, calling the handler with a crafted request and asserting the response.
+//   - Or in an integration test, by using the [net/http/httptest] package along the [*Router.ServeHTTP] method.
+//
+// Both ways are very fast, so choosing one is a matter of preference. Check the example below for each:
 //
 //	func HelloWorld(r *lit.Request) lit.Response {
 //		return render.OK("Hello, World!")
 //	}
 //
-//	func TestHelloWorld(t *testing.T) {
+//	func TestHelloWorld_Unit(t *testing.T) {
+//		var (
+//			request = lit.NewRequest(
+//				httptest.NewRequest(http.MethodGet, "/", nil),
+//			)
+//			got  = HelloWorld(request)
+//			want = render.OK("Hello, World!")
+//		)
+//
+//		if !reflect.DeepEqual(got, want) {
+//			t.Fatalf("got: %v; want: %v", got, want)
+//		}
+//	}
+//
+//	func TestHelloWorld_Integration(t *testing.T) {
 //		router := lit.NewRouter()
 //		router.GET("/", HelloWorld)
 //
