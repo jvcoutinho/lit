@@ -1,4 +1,28 @@
-// Package bind contains model binding features to be used along *lit.Request.
+// Package bind contains model binding features to be used along [*lit.Request].
+//
+// # Binding functions
+//
+// All the functions of this package are binding functions, that parse the string data from the request and binds the
+// result to a Go struct. Supported functions are:
+//
+//   - [URIParameters] - one or more URL parameters;
+//   - [URIParameter] - one URL parameter;
+//   - [Body] - body or forms;
+//   - [Query] - query parameters or GET forms;
+//   - [Header] - one or more header fields;
+//   - [HeaderField] - one header field;
+//   - [Request] - optimized combination of [URIParameters], [Body], [Query] and [Header]. Preferred for reading
+//     from multiple inputs.
+//
+// If any of these functions fails to parse the request (for example, they couldn't bind a non-numeric string into
+// an integer field), they return [*Error], that contains a user-friendly message and can be used in the response as is.
+//
+// # Validations
+//
+// The bind package is integrated with the [github.com/jvcoutinho/lit/validate] package. If a struct passed as type
+// parameter for [Request], [URIParameters], [Body], [Query] or [Header] implements the
+// [github.com/jvcoutinho/lit/validate.Validatable] interface with a pointer receiver, these binding functions validate
+// the result and can return a validation error with a user-friendly message.
 package bind
 
 import (

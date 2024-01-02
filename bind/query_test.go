@@ -372,3 +372,23 @@ func ExampleQuery() {
 
 	// Output: 2009 Percy Jackson
 }
+
+func ExampleQuery_form() {
+	req := httptest.NewRequest(http.MethodGet, "/books", nil)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.URL.RawQuery = "publish_year=2009&name=Percy%20Jackson"
+
+	r := lit.NewRequest(req)
+
+	type BookQuery struct {
+		PublishYear uint   `query:"publish_year"`
+		Name        string `query:"name"`
+	}
+
+	query, err := bind.Query[BookQuery](r)
+	if err == nil {
+		fmt.Println(query.PublishYear, query.Name)
+	}
+
+	// Output: 2009 Percy Jackson
+}

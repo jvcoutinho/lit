@@ -1,6 +1,7 @@
 package bind_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -400,4 +401,33 @@ func TestRequest(t *testing.T) {
 			require.Equal(t, test.expectedResult, result)
 		})
 	}
+}
+
+func ExampleRequest() {
+	req := httptest.NewRequest(http.MethodPatch, "/users/123",
+		strings.NewReader(`{"name": "John", "age": 28}`))
+	req.Header.Add("Authorization", "Bearer token")
+
+	r := lit.NewRequest(req).WithURIParameters(map[string]string{"user_id": "123"})
+
+	type Request struct {
+		UserID              int    `uri:"user_id"`
+		Name                string `json:"name"`
+		Age                 int    `json:"age"`
+		AuthorizationHeader string `header:"Authorization"`
+	}
+
+	request, err := bind.Request[Request](r)
+	if err == nil {
+		fmt.Println(request.UserID)
+		fmt.Println(request.Name)
+		fmt.Println(request.Age)
+		fmt.Println(request.AuthorizationHeader)
+	}
+
+	// Output:
+	// 123
+	// John
+	// 28
+	// Bearer token
 }

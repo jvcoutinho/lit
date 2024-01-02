@@ -2,7 +2,7 @@
 //
 // # The basics
 //
-// In Lit, an HTTP handler is a function that receives a *lit.Request and returns a lit.Response. Register new handlers
+// In Lit, an HTTP handler is a function that receives a [*Request] and returns a [Response]. Register new handlers
 // using the [*Router.Handle] method.
 //
 // For instance, the Divide function below is a handler that returns the division of two integers coming from query
@@ -53,147 +53,34 @@
 //		}
 //	}
 //
-// It is recommended to use the [lit.Log] and [lit.Recover] middlewares.
+// It is recommended to use the [Log] and [Recover] middlewares.
 //
-// Check the other package-level examples to explore the capabilities of Lit.
+// Check the [package-level examples] for more use cases.
 //
-// # Model binding and validation
+// # Model binding
 //
 // Lit can parse and validate string data coming from a request's URI parameters, header, body or query parameters
-// to Go structs with the [github.com/jvcoutinho/lit/bind] and [github.com/jvcoutinho/lit/validate] packages' functions.
+// to Go structs.
 //
-// There are two ways a Go struct can be validated:
+// Check [github.com/jvcoutinho/lit/bind] package.
 //
-//   - If the target of a binding function is a struct that implements [github.com/jvcoutinho/lit/validate.Validatable]
-//     with a pointer receiver, the function automatically validates it.
-//   - Otherwise, the struct can be explicitly validated by calling the [github.com/jvcoutinho/lit/validate.Fields]
-//     function.
+// # Validation
 //
-// For instance, below there is a handler that patches the name, e-mail and birth year of a user:
+// Lit can validate Go structs with generics and compile-time assertions.
 //
-//	const minBirthYear = 1998
+// Check [github.com/jvcoutinho/lit/validate] package.
 //
-//	type UpdateUserRequest struct {
-//		ID        string `uri:"user_id"`
-//		Name      string `json:"name"`
-//		Email     string `json:"email"`
-//		BirthYear int    `json:"birth_year"`
-//	}
+// # Responding requests, redirecting, serving files and streams
 //
-//	func UpdateUser(r *lit.Request) lit.Response {
-//		req, err := bind.Request[UpdateUserRequest](r)
-//		if err != nil {
-//			return render.BadRequest(err)
-//		}
+// Lit responds requests with implementations of the [Response] interface. Current provided implementations include
+// JSON responses, redirections, no content responses, files and streams.
 //
-//		if err := validate.Fields(&req,
-//			validate.UUID(&req.ID),
-//			validate.NotEmpty(&req.Name),
-//			validate.Email(&req.Email),
-//			validate.GreaterOrEqual(&req.BirthYear, minBirthYear),
-//		); err != nil {
-//			return render.BadRequest(err)
-//		}
+// Check [github.com/jvcoutinho/lit/render] package.
 //
-//		// Patching user in database...
+// # Testing handlers
 //
-//		return render.NoContent()
-//	}
-//
-// The [github.com/jvcoutinho/lit/validate] package contains several common validations, but creating a custom
-// validation compatible with Lit is as easy as creating a new [github.com/jvcoutinho/lit/validate.Field] object!
-//
-// For example, below there is a new validation that checks if a time field is after another time field. If the
-// validation fails, Lit produces a [*github.com/jvcoutinho/lit/validate.Error] with the message "since should be after
-// until".
-//
-//	type GetBooksFromReleaseDate struct {
-//		Since time.Time `json:"since"`
-//		Until time.Time `json:"until"`
-//	}
-//
-//	func (r *GetBooksFromReleaseDate) Validate() []validate.Field {
-//		return []validate.Field{
-//			AfterField(&r.Until, &r.Since),
-//		}
-//	}
-//
-//	// AfterField validates if target is after field.
-//	func AfterField(target *time.Time, field *time.Time) validate.Field {
-//		return validate.Field{
-//			Valid:   target != nil && field != nil && target.After(*field),
-//			Message: "{0} should be after {1}",
-//			Fields:  []any{target, field},
-//		}
-//	}
-//
-// Check each package's documentation for more examples and the functions provided.
-//
-// # Returning responses
-//
-// The [github.com/jvcoutinho/lit/render] package contains several constructors for implementations of [lit.Response],
-// including JSON responses, redirections, no content responses, files and streams.
-//
-// Custom responses can be created by implementing [lit.Response] or by calling the [lit.ResponseFunc] function. The
-// former is preferred if one intends to return the response in multiple handlers. Check the example below.
-//
-//	// YAMLResponse is a lit.Response that prints a YAML formatted-body as response. It sets
-//	// the Content-Type header to "application/x-yaml".
-//	//
-//	// If the response contains a body but its marshalling fails, YAMLResponse responds an Internal Server Error
-//	// with the error message as plain text.
-//	type YAMLResponse struct {
-//		StatusCode int
-//		Header     http.Header
-//		Body       any
-//	}
-//
-//	// YAML responds the request with statusCode and a body marshalled as YAML. Nil body equals empty body.
-//	//
-//	// If body is a string or an error, YAML marshals render.Message with the body assigned to render.Message.Value.
-//	// Otherwise, it marshals the body as is.
-//	func YAML(statusCode int, body any) YAMLResponse {
-//		switch cast := body.(type) {
-//		case string:
-//			return YAMLResponse{statusCode, make(http.Header), render.Message{Value: cast}}
-//		case error:
-//			return YAMLResponse{statusCode, make(http.Header), render.Message{Value: cast.Error()}}
-//		default:
-//			return YAMLResponse{statusCode, make(http.Header), cast}
-//		}
-//	}
-//
-//	func (r YAMLResponse) Write(w http.ResponseWriter) {
-//		responseHeader := w.Header()
-//		for key := range r.Header {
-//			responseHeader.Set(key, r.Header.Get(key))
-//		}
-//
-//		if r.Body == nil {
-//			w.WriteHeader(r.StatusCode)
-//			return
-//		}
-//
-//		w.Header().Set("Content-Type", "application/x-yaml")
-//
-//		if err := r.writeBody(w); err != nil {
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//	}
-//
-//	func (r YAMLResponse) writeBody(w http.ResponseWriter) error {
-//		bodyBytes, err := yaml.Marshal(r.Body)
-//		if err != nil {
-//			return err
-//		}
-//
-//		w.WriteHeader(r.StatusCode)
-//
-//		_, err = w.Write(bodyBytes)
-//
-//		return err
-//	}
+// Handlers can be unit tested in several ways. The simplest and idiomatic form is calling the handler with a crafted
+// request and asserting the response:
 //
 //	type Request struct {
 //		A int `query:"a"`
@@ -209,58 +96,119 @@
 //	func Divide(r *lit.Request) lit.Response {
 //		req, err := bind.Query[Request](r)
 //		if err != nil {
-//			return YAML(http.StatusBadRequest, err)
+//			return render.BadRequest(err)
 //		}
 //
-//		return YAML(http.StatusOK, req.A/req.B)
+//		return render.OK(req.A / req.B)
 //	}
 //
-// Check the [github.com/jvcoutinho/lit/render] package for more examples and the functions provided.
+//	func TestDivide(t *testing.T) {
+//		t.Parallel()
 //
-// # Testing
+//		tests := []struct {
+//			description string
+//			a           int
+//			b           int
+//			want        lit.Response
+//		}{
+//			{
+//				description: "BEquals0",
+//				a:           3,
+//				b:           0,
+//				want:        render.BadRequest("b should not be equal to 0"),
+//			},
+//			{
+//				description: "Division",
+//				a:           6,
+//				b:           3,
+//				want:        render.OK(2),
+//			},
+//		}
 //
-// Handlers can be tested in several ways. Two of them are:
-//   - Testing in a unit test, calling the handler with a crafted request and asserting the response.
-//   - Or in an integration test, by using the [net/http/httptest] package along the [*Router.ServeHTTP] method.
+//		for _, test := range tests {
+//			test := test
+//			t.Run(test.description, func(t *testing.T) {
+//				t.Parallel()
 //
-// Both ways are very fast, so choosing one is a matter of preference. Check the example below for each:
+//				var (
+//					path    = fmt.Sprintf("/?a=%d&b=%d", test.a, test.b)
+//					request = lit.NewRequest(
+//						httptest.NewRequest(http.MethodGet, path, nil),
+//					)
+//					got  = Divide(request)
+//					want = test.want
+//				)
 //
-//	func HelloWorld(r *lit.Request) lit.Response {
-//		return render.OK("Hello, World!")
-//	}
-//
-//	func TestHelloWorld_Unit(t *testing.T) {
-//		var (
-//			request = lit.NewRequest(
-//				httptest.NewRequest(http.MethodGet, "/", nil),
-//			)
-//			got  = HelloWorld(request)
-//			want = render.OK("Hello, World!")
-//		)
-//
-//		if !reflect.DeepEqual(got, want) {
-//			t.Fatalf("got: %v; want: %v", got, want)
+//				if !reflect.DeepEqual(got, want) {
+//					t.Fatalf("got: %v; want: %v", got, want)
+//				}
+//			})
 //		}
 //	}
 //
-//	func TestHelloWorld_Integration(t *testing.T) {
-//		router := lit.NewRouter()
-//		router.GET("/", HelloWorld)
+// # Testing middlewares
 //
-//		var (
-//			request  = httptest.NewRequest(http.MethodGet, "/", nil)
-//			recorder = httptest.NewRecorder()
-//		)
+// Middlewares can be tested in the same way as handlers (crafting a request and asserting the response of the handler
+// after the transformation):
 //
-//		router.ServeHTTP(recorder, request)
+//	func ValidateXAPIKeyHeader(h lit.Handler) lit.Handler {
+//		return func(r *lit.Request) lit.Response {
+//			apiKeyHeader, err := bind.HeaderField[string](r, "X-API-KEY")
+//			if err != nil {
+//				return render.BadRequest(err)
+//			}
 //
-//		const expectedResponse = `{"message":"Hello, World!"}`
-//		if recorder.Body.String() != expectedResponse {
-//			t.Fatalf("got: %s; want: %s", recorder.Body, expectedResponse)
-//		}
+//			if apiKeyHeader == "" {
+//				return render.Unauthorized("API Key must be provided")
+//			}
 //
-//		if recorder.Code != http.StatusOK {
-//			t.Fatalf("got: %d; want: %d", recorder.Code, http.StatusOK)
+//			return h(r)
 //		}
 //	}
+//
+//	func TestValidateXAPIKeyHeader(t *testing.T) {
+//		t.Parallel()
+//
+//		testHandler := func(r *lit.Request) lit.Response {
+//			return render.NoContent()
+//		}
+//
+//		tests := []struct {
+//			description  string
+//			apiKeyHeader string
+//			want         lit.Response
+//		}{
+//			{
+//				description:  "EmptyHeader",
+//				apiKeyHeader: "",
+//				want:         render.Unauthorized("API Key must be provided"),
+//			},
+//			{
+//				description:  "ValidAPIKey",
+//				apiKeyHeader: "api-key-1",
+//				want:         render.NoContent(),
+//			},
+//		}
+//
+//		for _, test := range tests {
+//			test := test
+//			t.Run(test.description, func(t *testing.T) {
+//				t.Parallel()
+//
+//				r := httptest.NewRequest(http.MethodGet, "/", nil)
+//				r.Header.Add("X-API-KEY", test.apiKeyHeader)
+//
+//				var (
+//					request = lit.NewRequest(r)
+//					got     = ValidateXAPIKeyHeader(testHandler)(request)
+//				)
+//
+//				if !reflect.DeepEqual(got, test.want) {
+//					t.Fatalf("got: %v; want: %v", got, test.want)
+//				}
+//			})
+//		}
+//	}
+//
+// [package-level examples]: https://pkg.go.dev/github.com/jvcoutinho/lit#pkg-examples
 package lit

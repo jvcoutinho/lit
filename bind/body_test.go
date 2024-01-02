@@ -368,3 +368,26 @@ func ExampleBody() {
 	// Percy Jackson
 	// 2009
 }
+
+func ExampleBody_form() {
+	req := httptest.NewRequest(http.MethodGet, "/books", nil)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.URL.RawQuery = "publishYear=2009&name=Percy%20Jackson"
+
+	r := lit.NewRequest(req)
+
+	type RequestBody struct {
+		Name        string `form:"name"`
+		PublishYear int    `form:"publishYear"`
+	}
+
+	body, err := bind.Body[RequestBody](r)
+	if err == nil {
+		fmt.Println(body.Name)
+		fmt.Println(body.PublishYear)
+	}
+
+	// Output:
+	// Percy Jackson
+	// 2009
+}
