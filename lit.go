@@ -30,7 +30,7 @@
 //
 // In order to extend a handler's functionality and to be able to reuse the logic in several handlers,
 // such as logging or authorization logic, one can use middlewares.
-// In Lit, a middleware is a function that receives a Handler and returns a Handler. Register new middlewares
+// In Lit, a middleware is a function that receives a [Handler] and returns a [Handler]. Register new middlewares
 // using the [*Router.Use] method.
 //
 // For instance, the AppendRequestID function below is a middleware that assigns an ID to the request and appends it
@@ -53,21 +53,21 @@
 //		}
 //	}
 //
-// It is highly recommended to always use the [lit.Log] and [lit.Recover] middlewares, in this order.
+// It is recommended to use the [lit.Log] and [lit.Recover] middlewares.
 //
-// Check the other examples to explore the capabilities of Lit.
+// Check the other package-level examples to explore the capabilities of Lit.
 //
 // # Model binding and validation
 //
 // Lit can parse and validate string data coming from a request's URI parameters, header, body or query parameters
-// to Go structs with the [lit/bind] and [lit/validate] packages' functions. They rely on parametric polymorphism
-// (generics) for their functioning.
+// to Go structs with the [github.com/jvcoutinho/lit/bind] and [github.com/jvcoutinho/lit/validate] packages' functions.
 //
 // There are two ways a Go struct can be validated:
 //
-//   - If the target of a binding function is a struct that implements [validate.Validatable] with a pointer receiver,
-//     the function automatically validates it.
-//   - Otherwise, the struct can be explicitly validated by calling the [validate.Fields] function.
+//   - If the target of a binding function is a struct that implements [github.com/jvcoutinho/lit/validate.Validatable]
+//     with a pointer receiver, the function automatically validates it.
+//   - Otherwise, the struct can be explicitly validated by calling the [github.com/jvcoutinho/lit/validate.Fields]
+//     function.
 //
 // For instance, below there is a handler that patches the name, e-mail and birth year of a user:
 //
@@ -100,11 +100,12 @@
 //		return render.NoContent()
 //	}
 //
-// The [lit/validate] package contains several common validations, but creating a custom validation compatible with Lit
-// is as easy as creating a new [validate.Field] object!
+// The [github.com/jvcoutinho/lit/validate] package contains several common validations, but creating a custom
+// validation compatible with Lit is as easy as creating a new [github.com/jvcoutinho/lit/validate.Field] object!
 //
 // For example, below there is a new validation that checks if a time field is after another time field. If the
-// validation fails, Lit produces a [*validate.Error] with the message "since should be after until".
+// validation fails, Lit produces a [*github.com/jvcoutinho/lit/validate.Error] with the message "since should be after
+// until".
 //
 //	type GetBooksFromReleaseDate struct {
 //		Since time.Time `json:"since"`
@@ -130,8 +131,8 @@
 //
 // # Returning responses
 //
-// The [lit/render] package contains several constructors for implementations of [lit.Response], including JSON
-// responses, redirections, no content responses, files and streams.
+// The [github.com/jvcoutinho/lit/render] package contains several constructors for implementations of [lit.Response],
+// including JSON responses, redirections, no content responses, files and streams.
 //
 // Custom responses can be created by implementing [lit.Response] or by calling the [lit.ResponseFunc] function. The
 // former is preferred if one intends to return the response in multiple handlers. Check the example below.
@@ -214,5 +215,34 @@
 //		return YAML(http.StatusOK, req.A/req.B)
 //	}
 //
-// Check the [lit/render] package for more examples and the functions provided.
+// Check the [github.com/jvcoutinho/lit/render] package for more examples and the functions provided.
+//
+// # Testing
+//
+// Handlers can be tested by using the [net/http/httptest] package:
+//
+//	func HelloWorld(r *lit.Request) lit.Response {
+//		return render.OK("Hello, World!")
+//	}
+//
+//	func TestHelloWorld(t *testing.T) {
+//		router := lit.NewRouter()
+//		router.GET("/", HelloWorld)
+//
+//		var (
+//			request  = httptest.NewRequest(http.MethodGet, "/", nil)
+//			recorder = httptest.NewRecorder()
+//		)
+//
+//		router.ServeHTTP(recorder, request)
+//
+//		const expectedResponse = `{"message":"Hello, World!"}`
+//		if recorder.Body.String() != expectedResponse {
+//			t.Fatalf("got: %s; want: %s", recorder.Body, expectedResponse)
+//		}
+//
+//		if recorder.Code != http.StatusOK {
+//			t.Fatalf("got: %d; want: %d", recorder.Code, http.StatusOK)
+//		}
+//	}
 package lit

@@ -55,6 +55,7 @@ Then you can start adding new routes and middlewares.
   maintainable, extensible and testable.
 - **Flexibility**: It allows one to easily extend its constructs. Creating new validations, middlewares and responses,
   for example, is very simple and intuitive.
+- **Idiomatic**: It uses latest Go features, such as generics, in order to build a framework that is elegant to code.
 
 ## Benchmarks
 
