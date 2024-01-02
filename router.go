@@ -114,6 +114,22 @@ func (r *Router) HandleNotFound(handler Handler) {
 	r.router.NotFound = handler.Base()
 }
 
+// HandleOPTIONS registers handler to be called when the request method is OPTIONS. By default, Lit sets the
+// Allow header with supported methods.
+//
+// Useful to support preflight CORS requests, for instance.
+//
+// If handler is nil, HandleOPTIONS clears the current set handler. In this case, the behaviour is to call the
+// registered handler normally, if there is one.
+func (r *Router) HandleOPTIONS(handler Handler) {
+	if handler == nil {
+		r.router.HandleOPTIONS = false
+		r.router.GlobalOPTIONS = nil
+	}
+
+	r.router.GlobalOPTIONS = handler.Base()
+}
+
 // HandleMethodNotAllowed registers handler to be called when there is a match to a route, but not with that method.
 // By default, Lit uses a wrapped http.Error with status code [405 Method Not Allowed].
 //

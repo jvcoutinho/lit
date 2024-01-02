@@ -487,6 +487,12 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			})
 		}
 
+		notContentHandler = func(r *lit.Request) lit.Response {
+			return lit.ResponseFunc(func(w http.ResponseWriter) {
+				w.WriteHeader(http.StatusNoContent)
+			})
+		}
+
 		methodNotAllowedHandler = func(r *lit.Request) lit.Response {
 			return lit.ResponseFunc(func(w http.ResponseWriter) {
 				w.WriteHeader(http.StatusMethodNotAllowed)
@@ -598,6 +604,34 @@ func TestRouter_ServeHTTP(t *testing.T) {
 			expectedBody:       "404 page not found\n",
 			expectedStatusCode: http.StatusNotFound,
 			expectedHeader: http.Header{
+				"Content-Type":           {"text/plain; charset=utf-8"},
+				"X-Content-Type-Options": {"nosniff"},
+			},
+		},
+		{
+			description: "GivenHandleOPTIONSIsSet_AndMethodIsOPTIONS_ShouldRespondAllowHeaders",
+			setupRouter: func(r *lit.Router) {
+				r.HandleOPTIONS(notContentHandler)
+				r.Handle("/users", http.MethodGet, printUsersHandler)
+			},
+			request:            httptest.NewRequest(http.MethodOptions, "/users", nil),
+			expectedBody:       "",
+			expectedStatusCode: http.StatusNoContent,
+			expectedHeader: http.Header{
+				"Allow": {"GET, OPTIONS"},
+			},
+		},
+		{
+			description: "GivenHandleOPTIONSIsNotSet_AndMethodIsOPTIONS_ShouldRespondMethodNotAllowed",
+			setupRouter: func(r *lit.Router) {
+				r.HandleOPTIONS(nil)
+				r.Handle("/users", http.MethodGet, printUsersHandler)
+			},
+			request:            httptest.NewRequest(http.MethodOptions, "/users", nil),
+			expectedBody:       "Method Not Allowed\n",
+			expectedStatusCode: http.StatusMethodNotAllowed,
+			expectedHeader: http.Header{
+				"Allow":                  {"GET, OPTIONS"},
 				"Content-Type":           {"text/plain; charset=utf-8"},
 				"X-Content-Type-Options": {"nosniff"},
 			},
