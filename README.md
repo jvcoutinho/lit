@@ -33,10 +33,10 @@ func main() {
 	r.Use(lit.Log)
 	r.Use(lit.Recover)
 
-  r.GET("/", HelloWorld)
+	r.GET("/", HelloWorld)
 
-  server := http.Server{Addr: ":8080", Handler: r}
-  log.Fatalln(server.ListenAndServe())
+	server := http.Server{Addr: ":8080", Handler: r}
+	log.Fatalln(server.ListenAndServe())
 }
 
 func HelloWorld(r *lit.Request) lit.Response {
