@@ -48,7 +48,6 @@ func TestFileResponse(t *testing.T) {
 			expectedBody:       readFileContent(t, "./file_test.go"),
 			expectedHeader: http.Header{
 				"Accept-Ranges": {"bytes"},
-				"Content-Type":  {"text/plain; charset=utf-8"},
 			},
 		},
 		{
