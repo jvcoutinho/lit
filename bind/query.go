@@ -11,8 +11,8 @@ const queryParameterTag = "query"
 //
 // If a field can't be bound, Query returns Error.
 //
-// If *T implements validate.Validatable (with a pointer receiver), Query calls validate.Fields on the result
-// and can return validate.Error.
+// If *T implements [validate.Validatable] (with a pointer receiver), Query calls [validate.Fields] on the result
+// and can return [validate.Error].
 //
 // If T is not a struct type, Query panics.
 func Query[T any](r *lit.Request) (T, error) {

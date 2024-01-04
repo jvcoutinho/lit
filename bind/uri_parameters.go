@@ -11,8 +11,8 @@ const uriParameterTag = "uri"
 //
 // If a field can't be bound, URIParameters returns Error.
 //
-// If *T implements validate.Validatable (with a pointer receiver), URIParameters calls validate.Fields on the result
-// and can return validate.Error.
+// If *T implements [validate.Validatable] (with a pointer receiver), URIParameters calls [validate.Fields] on the
+// result and can return [validate.Error].
 //
 // If T is not a struct type, URIParameters panics.
 func URIParameters[T any](r *lit.Request) (T, error) {
