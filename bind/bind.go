@@ -28,6 +28,7 @@ package bind
 import (
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/textproto"
 	"reflect"
 	"strconv"
@@ -162,7 +163,27 @@ func bindStruct[T any, V string | []string](
 	return target, nil
 }
 
-func bindFields[T string | []string](
+func bindFiles(values []*multipart.FileHeader, target reflect.Value) error {
+	switch target.Interface().(type) {
+	case *multipart.FileHeader:
+		if len(values) > 0 {
+			target.Set(reflect.ValueOf(values[0]))
+			return nil
+		}
+	case []*multipart.FileHeader:
+		target.Set(reflect.ValueOf(values))
+		return nil
+	}
+
+	fileNames := make([]string, len(values))
+	for i, value := range values {
+		fileNames[i] = value.Filename
+	}
+
+	return Error{fmt.Sprint(fileNames), target.Type(), nil}
+}
+
+func bindFields[T string | []string | []*multipart.FileHeader](
 	values map[string]T,
 	fieldTag string,
 	structValue reflect.Value,

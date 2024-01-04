@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/jvcoutinho/lit"
 	"gopkg.in/yaml.v3"
@@ -14,6 +15,7 @@ import (
 
 const (
 	formTag = "form"
+	fileTag = "file"
 )
 
 var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
@@ -24,10 +26,14 @@ var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 //   - "application/json" for JSON parsing
 //   - "application/xml" or "text/xml" for XML parsing
 //   - "application/x-yaml" for YAML parsing
-//   - "application/x-www-form-urlencoded" for form parsing
+//   - "application/x-www-form-urlencoded" or "multipart/form-data" for form parsing
 //
-// Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately. For form parsing,
-// use the tag "form".
+// Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately. For form parsing, use
+// the tag "form".
+//
+// For files inside multipart forms, use the tag "file". Target fields should also be of type [*multipart.FileHeader] or
+// []*multipart.FileHeader.
+// The maximum number of bytes stored in memory is 32MB, while the rest is stored in temporary files.
 //
 // If the Content-Type header is not set, Body defaults to JSON parsing. If it is not supported, it returns
 // ErrUnsupportedContentType.
@@ -59,13 +65,17 @@ func Body[T any](r *lit.Request) (T, error) {
 func bindBody(r *lit.Request, target any, targetValue reflect.Value) error {
 	var err error
 
-	switch r.Header().Get("Content-Type") {
+	contentType := removeFlags(r.Header().Get("Content-Type"))
+
+	switch contentType {
 	case "application/xml", "text/xml":
 		err = decodeXML(r.Body(), target)
 	case "application/x-yaml", "text/yaml":
 		err = decodeYAML(r.Body(), target)
 	case "application/x-www-form-urlencoded":
 		err = bindForm(r, targetValue)
+	case "multipart/form-data":
+		err = bindMultipartForm(r, targetValue)
 	case "application/json", "":
 		err = decodeJSON(r.Body(), target)
 	default:
@@ -79,6 +89,15 @@ func bindBody(r *lit.Request, target any, targetValue reflect.Value) error {
 	return err
 }
 
+func removeFlags(contentType string) string {
+	i := strings.IndexAny(contentType, "; ")
+	if i > 0 {
+		return contentType[:i]
+	}
+
+	return contentType
+}
+
 func bindForm(r *lit.Request, targetValue reflect.Value) error {
 	err := r.Base().ParseForm()
 	if err != nil {
@@ -88,6 +107,23 @@ func bindForm(r *lit.Request, targetValue reflect.Value) error {
 	fields := reflect.VisibleFields(targetValue.Type())
 
 	return bindFields(r.Base().Form, formTag, targetValue, fields, bindAll)
+}
+
+func bindMultipartForm(r *lit.Request, targetValue reflect.Value) error {
+	err := r.Base().ParseMultipartForm(32 << 20)
+	if err != nil {
+		return err
+	}
+
+	multipartForm := r.Base().MultipartForm
+
+	fields := reflect.VisibleFields(targetValue.Type())
+
+	if err := bindFields(multipartForm.Value, formTag, targetValue, fields, bindAll); err != nil {
+		return err
+	}
+
+	return bindFields(multipartForm.File, fileTag, targetValue, fields, bindFiles)
 }
 
 func decodeJSON(body io.ReadCloser, target any) error {
