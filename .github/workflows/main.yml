@@ -25,7 +25,6 @@ jobs:
         with:
           install-mode: goinstall
   test:
-    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
