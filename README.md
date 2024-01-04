@@ -1,3 +1,7 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/jvcoutinho/lit.svg)](https://pkg.go.dev/github.com/jvcoutinho/lit)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jvcoutinho/lit)](https://goreportcard.com/report/github.com/jvcoutinho/lit)
+[![codecov](https://codecov.io/github/jvcoutinho/lit/graph/badge.svg?token=65B6W5I6GG)](https://codecov.io/github/jvcoutinho/lit)
+
 # Lit 🔥
 
 Lit is an expressive and fast HTTP framework for Golang. It aims to enhance development by
@@ -21,26 +25,26 @@ Write this to your `main.go` file:
 package main
 
 import (
-	"log"
-	"net/http"
+  "log"
+  "net/http"
 
-	"github.com/jvcoutinho/lit"
-	"github.com/jvcoutinho/lit/render"
+  "github.com/jvcoutinho/lit"
+  "github.com/jvcoutinho/lit/render"
 )
 
 func main() {
-	r := lit.NewRouter()
-	r.Use(lit.Log)
-	r.Use(lit.Recover)
+  r := lit.NewRouter()
+  r.Use(lit.Log)
+  r.Use(lit.Recover)
 
-	r.GET("/", HelloWorld)
+  r.GET("/", HelloWorld)
 
-	server := http.Server{Addr: ":8080", Handler: r}
-	log.Fatalln(server.ListenAndServe())
+  server := http.Server{Addr: ":8080", Handler: r}
+  log.Fatalln(server.ListenAndServe())
 }
 
 func HelloWorld(r *lit.Request) lit.Response {
-	return render.OK("Hello, World!")
+  return render.OK("Hello, World!")
 }
 ```
 
