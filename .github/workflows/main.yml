@@ -29,6 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: actions/setup-go@v5.0.0
+        with:
+          go-version: '1.21'
       
       - name: Run tests
         run: go test -json ./... -covermode=atomic -coverprofile go_test_lit.out
