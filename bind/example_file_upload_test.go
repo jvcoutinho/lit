@@ -24,8 +24,8 @@ type UploadFileRequest struct {
 
 func (r *UploadFileRequest) Validate() []validate.Field {
 	return []validate.Field{
+		validate.Required(r.FileHeader),
 		Directory(&r.Directory),
-		validate.Required(&r.FileHeader),
 	}
 }
 

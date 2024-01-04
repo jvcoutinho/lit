@@ -134,8 +134,8 @@ func Between[T constraints.Ordered](target *T, min, max T) Field {
 	}
 }
 
-// Required validates that target is not nil. Suited for when target is the pointer of a pointer field.
-func Required[T comparable](target *T) Field {
+// Required validates that target is not nil. Suited for when target is a pointer field.
+func Required[T any](target *T) Field {
 	return Field{
 		Valid:   target != nil,
 		Message: "{0} is required",
