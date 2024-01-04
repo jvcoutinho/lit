@@ -7,7 +7,7 @@
 //
 //   - [URIParameters] - one or more URL parameters;
 //   - [URIParameter] - one URL parameter;
-//   - [Body] - body or forms;
+//   - [Body] - body or forms (of any kind);
 //   - [Query] - query parameters or GET forms;
 //   - [Header] - one or more header fields;
 //   - [HeaderField] - one header field;
@@ -16,6 +16,12 @@
 //
 // If any of these functions fails to parse the request (for example, they couldn't bind a non-numeric string into
 // an integer field), they return [*Error], that contains a user-friendly message and can be used in the response as is.
+//
+// # Receiving files
+//
+// [Body] and [Request] support uploading of files from multipart form requests, with the only requirements being using
+// the appropriate "file" tag and making targeted fields of type [*multipart.FileHeader] (or its slice variant). Check
+// the package-level example.
 //
 // # Validations
 //

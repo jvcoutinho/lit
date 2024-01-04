@@ -16,6 +16,7 @@ const (
 	queryTag               = "query"
 	headerTag              = "header"
 	formTag                = "form"
+	fileTag                = "file"
 	nonStructTypeParameter = "T must be a struct type"
 )
 
@@ -70,7 +71,7 @@ func Fields[T any](target *T, validations ...Field) error {
 			violations[vi].Message = strings.ReplaceAll(
 				violations[vi].Message,
 				fmt.Sprintf("{%d}", ai),
-				getReplacement(field, jsonTag, uriTag, queryTag, headerTag, formTag, yamlTag, xmlTag),
+				getReplacement(field, jsonTag, uriTag, queryTag, headerTag, formTag, yamlTag, xmlTag, fileTag),
 			)
 		}
 	}

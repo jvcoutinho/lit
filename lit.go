@@ -57,10 +57,10 @@
 //
 // Check the [package-level examples] for more use cases.
 //
-// # Model binding
+// # Model binding and receiving files
 //
-// Lit can parse and validate string data coming from a request's URI parameters, header, body or query parameters
-// to Go structs.
+// Lit can parse and validate data coming from a request's URI parameters, header, body or query parameters
+// to Go structs, including files from multipart form requests.
 //
 // Check [github.com/jvcoutinho/lit/bind] package.
 //
