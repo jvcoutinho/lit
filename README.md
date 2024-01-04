@@ -1,6 +1,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/jvcoutinho/lit.svg)](https://pkg.go.dev/github.com/jvcoutinho/lit)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jvcoutinho/lit)](https://goreportcard.com/report/github.com/jvcoutinho/lit)
 [![codecov](https://codecov.io/github/jvcoutinho/lit/graph/badge.svg?token=65B6W5I6GG)](https://codecov.io/github/jvcoutinho/lit)
+
 # Lit 🔥
 
 Lit is an expressive and fast HTTP framework for Golang. It aims to enhance development by
