@@ -20,8 +20,8 @@
 // # Receiving files
 //
 // [Body] and [Request] support uploading of files from multipart form requests, with the only requirements being using
-// the appropriate "file" tag and making targeted fields of type [*multipart.FileHeader] (or its slice variant). Check
-// the package-level example.
+// the appropriate "file" tag and making targeted fields of type [*mime/multipart.FileHeader] (or its slice variant).
+// Check the package-level example.
 //
 // # Validations
 //

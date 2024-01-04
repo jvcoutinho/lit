@@ -1,4 +1,5 @@
-// Package validate contains field validations for Go structs, appropriated to use with [*lit.Request].
+// Package validate contains field validations for Go structs, appropriated to use with
+// [*lit.Request].
 //
 // There are two ways a struct can be validated:
 //
@@ -6,13 +7,13 @@
 //   - Implicitly, by making the struct implement [Validatable] with a pointer receiver
 //     and using the [binding functions].
 //
-// When a validation fails, [Fields] use the [Field.Message] and [Field.Fields] attributes to build the validation
-// error. Placeholders {i}, where i is the index of a field in the latter, are replaces with the field's request name.
+// When a validation fails, [Fields] use the Message and Fields attributes of the [Field] struct
+// to build the validation error.
 //
 // # Custom validations
 //
 // A validation is simply an instance of the struct [Field]. In order to create a new validation, is enough to just
-// create your own instance, passing the arguments. You could also change only the [Field.Message] field, if that
+// create your own instance, passing the arguments. You could also change only the Message field, if that
 // meets your use case. Check the [package-level examples].
 //
 // [binding functions]: https://pkg.go.dev/github.com/jvcoutinho/lit/bind

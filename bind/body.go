@@ -31,8 +31,8 @@ var ErrUnsupportedContentType = errors.New("unsupported Content-Type")
 // Tags from encoding packages, such as "json", "xml" and "yaml" tags, can be used appropriately. For form parsing, use
 // the tag "form".
 //
-// For files inside multipart forms, use the tag "file". Target fields should also be of type [*multipart.FileHeader] or
-// []*multipart.FileHeader.
+// For files inside multipart forms, use the tag "file". Target fields should also be of type
+// [*mime/multipart.FileHeader] or [][*mime/multipart.FileHeader].
 // The maximum number of bytes stored in memory is 32MB, while the rest is stored in temporary files.
 //
 // If the Content-Type header is not set, Body defaults to JSON parsing. If it is not supported, it returns
