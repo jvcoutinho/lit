@@ -346,6 +346,22 @@ func TestRequest(t *testing.T) {
 			expectedResult: bindableFields{Uint: 10, Uint8: 10},
 		},
 		{
+			description: "WhenContentTypeIsMultipartForm_ShouldParseFormBody",
+			body: `
+--BOUNDARY
+Content-Disposition: form-data; name="uint"
+
+10
+--BOUNDARY--`,
+			header: http.Header{
+				"Content-Type": {"multipart/form-data; boundary=BOUNDARY"},
+			},
+			function: func(r *lit.Request) (any, error) {
+				return bind.Request[bindableFields](r)
+			},
+			expectedResult: bindableFields{Uint: 10},
+		},
+		{
 			description:   "WhenTypeParameterIsValidatableWithValueReceiver_ShouldNotValidate",
 			uriParameters: map[string]string{"string": "string"},
 			function: func(r *lit.Request) (any, error) {

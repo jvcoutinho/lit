@@ -198,8 +198,8 @@ func ExampleFields() {
 	r := lit.NewRequest(req)
 
 	type RequestBody struct {
-		Name        string `json:"name" validate:"name"`
-		PublishYear int    `json:"publishYear" validate:"publishYear"`
+		Name        string `json:"name"`
+		PublishYear int    `json:"publishYear"`
 	}
 
 	body, _ := bind.Body[RequestBody](r)
