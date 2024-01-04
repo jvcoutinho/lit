@@ -12,14 +12,20 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go environment
-        uses: actions/setup-go@v5.0.0
-        
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3.7.0    
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-go@v5.0.0
+          
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3 
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-go@v5.0.0
       
       - name: Run tests
         run: go test -json ./... -covermode=atomic -coverprofile go_test_lit.out
