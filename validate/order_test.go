@@ -141,7 +141,7 @@ func TestOneOf(t *testing.T) {
 			t.Parallel()
 
 			// Act
-			result := validate.OneOf(test.target, test.values)
+			result := validate.OneOf(test.target, test.values...)
 
 			// Assert
 			expectedResult := validate.Field{
