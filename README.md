@@ -61,6 +61,8 @@ Then you can start adding new routes and middlewares.
   for example, is very simple and intuitive.
 - **Idiomatic**: It uses latest Go features, such as generics, in order to build a framework that is elegant to code.
 
+Check an example of [`lit.Handler`](https://go.dev/play/p/pbSkMBvwC0w) vs [`http.Handler`](https://go.dev/play/p/XcsDDrrcjyU).
+
 ## Benchmarks
 
 The instances below were tested with the specifications:
