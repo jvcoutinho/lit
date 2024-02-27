@@ -45,7 +45,7 @@ func NotEqualField[T comparable](target *T, field *T) Field {
 }
 
 // OneOf validates if target is one of values.
-func OneOf[T comparable](target *T, values []T) Field {
+func OneOf[T comparable](target *T, values ...T) Field {
 	return Field{
 		Valid:   target != nil && slices.Contains(values, *target),
 		Message: fmt.Sprintf("{0} should be one of %v", values),
